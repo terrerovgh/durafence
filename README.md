@@ -2,21 +2,20 @@
 
 Sitio de Astro para [durafencemetal.com](https://durafencemetal.com).
 
-## Cloudflare Pages
+## Cloudflare
 
-Conecta este repositorio en Workers & Pages → Create → Pages → Import a Git repository.
-
-| Ajuste | Valor |
-| --- | --- |
-| Production branch | `main` |
-| Framework preset | Astro |
-| Build command | `npm run build` |
-| Build output directory | `dist` |
-| Root directory | `/` |
+Los dominios `durafencemetal.com` y `www.durafencemetal.com` están en el Worker `durafence`. `wrangler.jsonc` publica el sitio estático de `dist/` en ese Worker. `www` redirige al dominio principal.
 
 Node queda fijado en `.node-version` (`22.16.0`). Astro 7 no construye con Node 18.
 
-Las Pages Functions viven en `functions/` (formulario de presupuesto y redirecciones del dominio). Cloudflare las toma de la raíz del repositorio; no hace falta copiarlas dentro de `dist`.
+Para publicar una versión nueva:
+
+```sh
+npm run build
+npx wrangler deploy
+```
+
+Si conectas el repositorio al Worker, el comando de build es `npm run build` y el de deploy es `npx wrangler deploy`. No sustituyas el script por la plantilla Hello World del panel: esa plantilla es lo que deja la página en blanco de texto.
 
 ### Correo del formulario
 
