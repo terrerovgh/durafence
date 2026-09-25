@@ -1,0 +1,315 @@
+{
+  "retrievedOn": "2026-09-25",
+  "description": "Reference imagery from durafence.net; depicts source catalog products and installations, not Dura Fence Metal completed projects.",
+  "assets": [
+    {
+      "sourceUrl": "https://durafence.net/wp-content/uploads/2024/01/Dura-Fence-by-Lineal-Feet.jpg",
+      "sourcePages": [
+        "https://durafence.net/product/dura-fence-by-lineal-feet/"
+      ],
+      "file": "/images/catalog/Dura-Fence-by-Lineal-Feet.jpg",
+      "width": 800,
+      "height": 544
+    },
+    {
+      "sourceUrl": "https://durafence.net/wp-content/uploads/2024/01/Dura-Fence-Double-Swing-Gate.jpg",
+      "sourcePages": [
+        "https://durafence.net/product/dura-fence-double-swing-gate/"
+      ],
+      "file": "/images/catalog/Dura-Fence-Double-Swing-Gate.jpg",
+      "width": 800,
+      "height": 544
+    },
+    {
+      "sourceUrl": "https://durafence.net/wp-content/uploads/2024/01/42492761_472703063216913_5489094794154082304_n.jpg",
+      "sourcePages": [
+        "https://durafence.net/product/dura-fence-double-swing-gate/"
+      ],
+      "file": "/images/catalog/42492761_472703063216913_5489094794154082304_n.jpg",
+      "width": 960,
+      "height": 717
+    },
+    {
+      "sourceUrl": "https://durafence.net/wp-content/uploads/2024/01/244075560_1204756813344864_4117923942724484624_n.jpg",
+      "sourcePages": [
+        "https://durafence.net/product/dura-fence-double-swing-gate/"
+      ],
+      "file": "/images/catalog/244075560_1204756813344864_4117923942724484624_n.jpg",
+      "width": 768,
+      "height": 402
+    },
+    {
+      "sourceUrl": "https://durafence.net/wp-content/uploads/2024/01/366982152_637182235221092_7335492319248717080_n.jpg",
+      "sourcePages": [
+        "https://durafence.net/product/dura-fence-double-swing-gate/"
+      ],
+      "file": "/images/catalog/366982152_637182235221092_7335492319248717080_n.jpg",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "sourceUrl": "https://durafence.net/wp-content/uploads/2024/01/durafence4.jpg",
+      "sourcePages": [
+        "https://durafence.net/product/dura-fence-double-swing-gate/",
+        "https://durafence.net/"
+      ],
+      "file": "/images/catalog/durafence4.jpg",
+      "width": 480,
+      "height": 480
+    },
+    {
+      "sourceUrl": "https://durafence.net/wp-content/uploads/2024/01/42754227_474272496393303_1751379361413464064_n.jpg",
+      "sourcePages": [
+        "https://durafence.net/product/dura-fence-double-swing-gate/"
+      ],
+      "file": "/images/catalog/42754227_474272496393303_1751379361413464064_n.jpg",
+      "width": 720,
+      "height": 405
+    },
+    {
+      "sourceUrl": "https://durafence.net/wp-content/uploads/2024/01/Dura-Fence-Paint-Spray.jpg",
+      "sourcePages": [
+        "https://durafence.net/product/dura-fence-paint-spray/"
+      ],
+      "file": "/images/catalog/Dura-Fence-Paint-Spray.jpg",
+      "width": 800,
+      "height": 544
+    },
+    {
+      "sourceUrl": "https://durafence.net/wp-content/uploads/2024/01/Dura-Fence-Pedestrian-Gate.jpg",
+      "sourcePages": [
+        "https://durafence.net/product/dura-fence-pedestrian-gates/"
+      ],
+      "file": "/images/catalog/Dura-Fence-Pedestrian-Gate.jpg",
+      "width": 800,
+      "height": 544
+    },
+    {
+      "sourceUrl": "https://durafence.net/wp-content/uploads/2024/01/20108545_256008754886346_354606415964940962_n.jpg",
+      "sourcePages": [
+        "https://durafence.net/product/dura-fence-pedestrian-gates/"
+      ],
+      "file": "/images/catalog/20108545_256008754886346_354606415964940962_n.jpg",
+      "width": 447,
+      "height": 600
+    },
+    {
+      "sourceUrl": "https://durafence.net/wp-content/uploads/2024/01/3b6852dce5ac4597a38bafb0dfe07d1a_1.jpg",
+      "sourcePages": [
+        "https://durafence.net/product/dura-fence-pedestrian-gates/"
+      ],
+      "file": "/images/catalog/3b6852dce5ac4597a38bafb0dfe07d1a_1.jpg",
+      "width": 1000,
+      "height": 689
+    },
+    {
+      "sourceUrl": "https://durafence.net/wp-content/uploads/2024/01/cache_4202000480_1.jpg",
+      "sourcePages": [
+        "https://durafence.net/product/dura-fence-pedestrian-gates/"
+      ],
+      "file": "/images/catalog/cache_4202000480_1.jpg",
+      "width": 1000,
+      "height": 689
+    },
+    {
+      "sourceUrl": "https://durafence.net/wp-content/uploads/2024/01/whatsapp_image_2021-06-03_at_5.23.05_pm.jpeg",
+      "sourcePages": [
+        "https://durafence.net/product/dura-fence-pedestrian-gates/"
+      ],
+      "file": "/images/catalog/whatsapp_image_2021-06-03_at_5.23.05_pm.jpeg",
+      "width": 1000,
+      "height": 689
+    },
+    {
+      "sourceUrl": "https://durafence.net/wp-content/uploads/2024/01/Dura-Fence-Planks-1.jpg",
+      "sourcePages": [
+        "https://durafence.net/product/dura-fence-planks/"
+      ],
+      "file": "/images/catalog/Dura-Fence-Planks-1.jpg",
+      "width": 800,
+      "height": 544
+    },
+    {
+      "sourceUrl": "https://durafence.net/wp-content/uploads/2024/01/Dura-Fence-Post-Caps-1.jpg",
+      "sourcePages": [
+        "https://durafence.net/product/dura-fence-post-caps/"
+      ],
+      "file": "/images/catalog/Dura-Fence-Post-Caps-1.jpg",
+      "width": 800,
+      "height": 544
+    },
+    {
+      "sourceUrl": "https://durafence.net/wp-content/uploads/2024/01/Dura-Fence-Posts.jpg",
+      "sourcePages": [
+        "https://durafence.net/product/dura-fence-post/"
+      ],
+      "file": "/images/catalog/Dura-Fence-Posts.jpg",
+      "width": 800,
+      "height": 544
+    },
+    {
+      "sourceUrl": "https://durafence.net/wp-content/uploads/2024/01/Dura-Fence-Rails-Rails.jpg",
+      "sourcePages": [
+        "https://durafence.net/product/dura-fence-rails/"
+      ],
+      "file": "/images/catalog/Dura-Fence-Rails-Rails.jpg",
+      "width": 800,
+      "height": 544
+    },
+    {
+      "sourceUrl": "https://durafence.net/wp-content/uploads/2024/01/Dura-Fence-Sample-Box-.jpg",
+      "sourcePages": [
+        "https://durafence.net/product/dura-fence-sample/"
+      ],
+      "file": "/images/catalog/Dura-Fence-Sample-Box-.jpg",
+      "width": 800,
+      "height": 544
+    },
+    {
+      "sourceUrl": "https://durafence.net/wp-content/uploads/2024/01/Self-tapping-Screws-5-16.jpg",
+      "sourcePages": [
+        "https://durafence.net/product/dura-fence-self-tapping-screws-5-16/"
+      ],
+      "file": "/images/catalog/Self-tapping-Screws-5-16.jpg",
+      "width": 800,
+      "height": 544
+    },
+    {
+      "sourceUrl": "https://durafence.net/wp-content/uploads/2024/01/Dura-Fence-Slide-Gate.jpg",
+      "sourcePages": [
+        "https://durafence.net/product/dura-fence-slide-gates/"
+      ],
+      "file": "/images/catalog/Dura-Fence-Slide-Gate.jpg",
+      "width": 800,
+      "height": 544
+    },
+    {
+      "sourceUrl": "https://durafence.net/wp-content/uploads/2024/01/whatsapp_image_2021-06-03_at_5.23.05_pm_2_.jpeg",
+      "sourcePages": [
+        "https://durafence.net/product/dura-fence-slide-gates/",
+        "https://durafence.net/"
+      ],
+      "file": "/images/catalog/whatsapp_image_2021-06-03_at_5.23.05_pm_2_.jpeg",
+      "width": 1000,
+      "height": 689
+    },
+    {
+      "sourceUrl": "https://durafence.net/wp-content/uploads/2024/01/whatsapp_image_2021-06-03_at_5.23.04_pm_1_.jpeg",
+      "sourcePages": [
+        "https://durafence.net/product/dura-fence-slide-gates/"
+      ],
+      "file": "/images/catalog/whatsapp_image_2021-06-03_at_5.23.04_pm_1_.jpeg",
+      "width": 1000,
+      "height": 689
+    },
+    {
+      "sourceUrl": "https://durafence.net/wp-content/uploads/2024/01/whatsapp_image_2021-06-03_at_5.23.04_pm.jpeg",
+      "sourcePages": [
+        "https://durafence.net/product/dura-fence-slide-gates/",
+        "https://durafence.net/"
+      ],
+      "file": "/images/catalog/whatsapp_image_2021-06-03_at_5.23.04_pm.jpeg",
+      "width": 1000,
+      "height": 689
+    },
+    {
+      "sourceUrl": "https://durafence.net/wp-content/uploads/2024/01/53660840_559593607861191_8272575446999105536_n.jpg",
+      "sourcePages": [
+        "https://durafence.net/product/dura-fence-slide-gates/"
+      ],
+      "file": "/images/catalog/53660840_559593607861191_8272575446999105536_n.jpg",
+      "width": 1200,
+      "height": 1600
+    },
+    {
+      "sourceUrl": "https://durafence.net/wp-content/uploads/2024/01/noa-engineering-drawings.jpg",
+      "sourcePages": [
+        "https://durafence.net/product/durafence-noa-engineering-drawings/"
+      ],
+      "file": "/images/catalog/noa-engineering-drawings.jpg",
+      "width": 1000,
+      "height": 689
+    },
+    {
+      "sourceUrl": "https://durafence.net/wp-content/uploads/2024/01/Self-tapping-Screws-2.jpg",
+      "sourcePages": [
+        "https://durafence.net/product/durafence-self-tapping-screws-2%e2%80%b3/"
+      ],
+      "file": "/images/catalog/Self-tapping-Screws-2.jpg",
+      "width": 800,
+      "height": 544
+    },
+    {
+      "sourceUrl": "https://durafence.net/wp-content/uploads/2024/01/20170131_131539_1.jpg",
+      "sourcePages": [
+        "https://durafence.net/"
+      ],
+      "file": "/images/catalog/20170131_131539_1.jpg",
+      "width": 1000,
+      "height": 689
+    },
+    {
+      "sourceUrl": "https://durafence.net/wp-content/uploads/2024/01/69333799_656441814843036_8378153242147684352_n.jpg",
+      "sourcePages": [
+        "https://durafence.net/"
+      ],
+      "file": "/images/catalog/69333799_656441814843036_8378153242147684352_n.jpg",
+      "width": 960,
+      "height": 720
+    },
+    {
+      "sourceUrl": "https://durafence.net/wp-content/uploads/2024/01/2021-01-13.jpg",
+      "sourcePages": [
+        "https://durafence.net/"
+      ],
+      "file": "/images/catalog/2021-01-13.jpg",
+      "width": 960,
+      "height": 960
+    },
+    {
+      "sourceUrl": "https://durafence.net/wp-content/uploads/2024/01/42754227_474272496393303_1751379361413464064_n-1.jpg",
+      "sourcePages": [
+        "https://durafence.net/"
+      ],
+      "file": "/images/catalog/42754227_474272496393303_1751379361413464064_n-1.jpg",
+      "width": 720,
+      "height": 405
+    },
+    {
+      "sourceUrl": "https://durafence.net/wp-content/uploads/2024/01/42787990_474272859726600_379193784866439168_n.jpg",
+      "sourcePages": [
+        "https://durafence.net/"
+      ],
+      "file": "/images/catalog/42787990_474272859726600_379193784866439168_n.jpg",
+      "width": 1440,
+      "height": 810
+    },
+    {
+      "sourceUrl": "https://durafence.net/wp-content/uploads/2024/01/42838559_474272909726595_75842087290929152_n-1.jpg",
+      "sourcePages": [
+        "https://durafence.net/"
+      ],
+      "file": "/images/catalog/42838559_474272909726595_75842087290929152_n-1.jpg",
+      "width": 1440,
+      "height": 810
+    },
+    {
+      "sourceUrl": "https://durafence.net/wp-content/uploads/2024/01/53679359_559597201194165_7662342374709788672_n.jpg",
+      "sourcePages": [
+        "https://durafence.net/"
+      ],
+      "file": "/images/catalog/53679359_559597201194165_7662342374709788672_n.jpg",
+      "width": 1440,
+      "height": 1080
+    },
+    {
+      "sourceUrl": "https://durafence.net/wp-content/uploads/2024/01/54517247_563039877516564_8290852568658083840_n.jpg",
+      "sourcePages": [
+        "https://durafence.net/"
+      ],
+      "file": "/images/catalog/54517247_563039877516564_8290852568658083840_n.jpg",
+      "width": 1440,
+      "height": 1080
+    }
+  ]
+}

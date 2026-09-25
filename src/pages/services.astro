@@ -1,0 +1,80 @@
+---
+import Base from '../layouts/Base.astro';
+import { catalogImageSrc } from '../data/catalog-presentation';
+import CatalogImage from '../components/CatalogImage.astro';
+import CatalogCredit from '../components/CatalogCredit.astro';
+import ProductSpecs from '../components/ProductSpecs.astro';
+import { fence, gallery } from '../data/catalog';
+import { fencePackages, packageSpec } from '../data/estimate';
+---
+<Base title="Metal Privacy Fences in South Georgia | Dura Fence Metal" description="Metal privacy fencing by the linear foot in South Georgia. Explore 4–8 ft heights, white and bronze finishes, plus Standard and Premium estimates.">
+  <header class="frame page-open !pb-10">
+    <p class="kicker">Privacy for your property</p>
+    <h1 class="page-title">Metal privacy fences</h1>
+    <p class="lede">A coordinated system of metal planks, posts and rails for residential yards and commercial perimeters. Choose the look of your fence and plan every gate opening as part of the same project.</p>
+    <div class="mt-8 flex flex-wrap items-center gap-6">
+      <a class="btn-steel" href="/estimate/">Build your estimate</a>
+      <a class="link-quiet" href="#finishes">Explore finishes</a>
+    </div>
+  </header>
+  <section id={fence.id} class="border-t border-line" aria-labelledby="fence-title">
+    <div class="frame grid gap-10 md:grid-cols-2">
+      <div><CatalogImage image={fence.image} alt={fence.alt} eager /><CatalogCredit /></div>
+      <div>
+        <p class="kicker">By the linear foot</p>
+        <h2 id="fence-title" class="mt-3 text-3xl font-semibold">One complete privacy line</h2>
+        <p class="mt-4 text-muted">{fence.description}</p>
+        <ProductSpecs product={fence} />
+        <a class="link-quiet mt-6 inline-block" href="/parts/#planks">Explore individual planks and components</a>
+      </div>
+    </div>
+  </section>
+  <section id="finishes" class="border-t border-line" aria-labelledby="finishes-title">
+    <div class="frame">
+      <p class="kicker">Choose your finish</p>
+      <h2 id="finishes-title" class="mt-3 text-3xl font-semibold">White and bronze</h2>
+      <p class="lede">Choose white for a light perimeter or bronze for a darker finish. Confirm the finish before placing your order.</p>
+      <div class="mt-10 grid gap-8 md:grid-cols-3">
+        {gallery.slice(0, 2).map((item) => (
+          <figure>
+            <a class="block" href={catalogImageSrc(item.image)} aria-label={`View full image: ${item.title}`}>
+              <CatalogImage image={item.image} alt={item.alt} />
+            </a>
+            <figcaption class="mt-3 text-lg">{item.title}</figcaption>
+          </figure>
+        ))}
+      </div>
+      <CatalogCredit />
+    </div>
+  </section>
+  <section id="packages" class="border-t border-line" aria-labelledby="packages-title">
+    <div class="frame">
+      <p class="kicker">Dura Fence Metal packages</p>
+      <h2 id="packages-title" class="mt-3 text-3xl font-semibold">Choose your fence package</h2>
+      <p class="lede">Compare post spacing and rails, then choose installation or materials only. The estimator calculates your fence length and the extras you select.</p>
+      <div class="mt-10 grid gap-8 md:grid-cols-2">
+        {[fencePackages.standard, fencePackages.premium].map((pack) => (
+          <article class="border-t border-line pt-6">
+            <h3 class="text-2xl font-semibold">{pack.name}</h3>
+            <p class="mt-4 text-muted">{packageSpec(pack.id)}</p>
+          </article>
+        ))}
+      </div>
+      <p class="mt-6 text-sm text-muted">Package prices come from our estimate sheet. Confirm the selected height, finish and site requirements when requesting your quote.</p>
+      <a class="btn-steel mt-8" href="/estimate/">Calculate your price</a>
+    </div>
+  </section>
+  <section class="border-t border-line" aria-labelledby="planning-title">
+    <div class="frame grid gap-10 md:grid-cols-2">
+      <div>
+        <h2 id="planning-title" class="text-3xl font-semibold">Plan the fence and the openings together</h2>
+        <p class="lede">Bring the total length, desired height and finish, and the width of each gate opening. Include corners, changes in slope and existing sections that need to be matched.</p>
+        <a class="link-quiet mt-6 inline-block" href="/quote/">Request a project quote</a>
+      </div>
+      <div class="space-y-6">
+        <div><h3 class="text-xl font-semibold">Access that matches</h3><p class="mt-2 text-muted">Compare <a class="link-quiet" href="/gates/">pedestrian and double swing gates</a> before deciding where to place the openings.</p></div>
+        <div><h3 class="text-xl font-semibold">Parts for the system</h3><p class="mt-2 text-muted">Find <a class="link-quiet" href="/parts/">individual components</a> for repairs or materials orders.</p></div>
+      </div>
+    </div>
+  </section>
+</Base>

@@ -1,0 +1,38 @@
+---
+import manifest from '../../docs/research/durafence-images.json';
+import { catalogPresentation, catalogImageSrc } from '../data/catalog-presentation';
+interface Props { image: string; alt: string; eager?: boolean; }
+const { image, alt, eager = false } = Astro.props;
+const presentation = catalogPresentation[image] ?? {};
+const src = catalogImageSrc(image);
+const asset = manifest.assets.find((item) => item.file === src);
+const width = presentation.width ?? asset?.width ?? 800;
+const height = presentation.height ?? asset?.height ?? 544;
+const [x, y, cropWidth, cropHeight] = presentation.crop ?? [0, 0, width, height];
+// Fit the inspected safe rectangle to a consistent 3:2 frame without distortion.
+const visibleWidth = Math.min(cropWidth, cropHeight * 1.5);
+const visibleHeight = visibleWidth / 1.5;
+const left = x + (cropWidth - visibleWidth) / 2;
+const top = y + (cropHeight - visibleHeight) / 2;
+---
+<div class="catalog-media">
+  <img src={src} alt={alt} width={width} height={height}
+    loading={eager ? 'eager' : 'lazy'} decoding="async"
+    style={{ width: `${width / visibleWidth * 100}%`, height: `${height / visibleHeight * 100}%`, left: `${-left / visibleWidth * 100}%`, top: `${-top / visibleHeight * 100}%` }} />
+</div>
+
+<style>
+  .catalog-media {
+    position: relative;
+    aspect-ratio: 3 / 2;
+    width: 100%;
+    overflow: hidden;
+    border-radius: 12px;
+    background: var(--color-ink);
+  }
+  .catalog-media img {
+    position: absolute;
+    display: block;
+    max-width: none;
+  }
+</style>

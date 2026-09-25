@@ -1,0 +1,31 @@
+services:
+  durafencemetal-dev:
+    build: .
+    container_name: durafencemetal-dev
+    restart: unless-stopped
+    working_dir: /app
+    command: npm run dev -- --host 0.0.0.0 --port 4321
+    volumes:
+      - .:/app
+      - durafencemetal-node-modules:/app/node_modules
+    networks:
+      - traefik-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik_traefik-net"
+      - "traefik.http.routers.durafencemetal.rule=Host(`durafencemetal.terrerov.com`)"
+      - "traefik.http.routers.durafencemetal.entrypoints=websecure"
+      - "traefik.http.routers.durafencemetal.tls.certresolver=cloudflare"
+      - "traefik.http.routers.durafencemetal.middlewares=ipwhitelist@file"
+      - "traefik.http.routers.durafencemetal-redirect.rule=Host(`durafencemetal.terrerov.com`)"
+      - "traefik.http.routers.durafencemetal-redirect.entrypoints=web"
+      - "traefik.http.routers.durafencemetal-redirect.middlewares=redirect-to-https@file"
+      - "traefik.http.services.durafencemetal.loadbalancer.server.port=4321"
+
+networks:
+  traefik-net:
+    external: true
+    name: traefik_traefik-net
+
+volumes:
+  durafencemetal-node-modules:

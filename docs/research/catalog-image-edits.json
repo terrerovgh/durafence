@@ -1,0 +1,40 @@
+{
+  "tool": "Built-in image_gen",
+  "edits": [
+    {
+      "id": "posts",
+      "path": "/home/terrerov/.codex/generated_images/01a0d8ff-618a-7c10-9ee6-57a2fe87fe12/exec-1a4a9046-41c0-4aa5-b6a1-5e1a4c8df8af.png",
+      "prompt": "Edit target: supplied product collage. Create a clean product cutout presentation for the elegant black/steel/muted gold Durafencemetal website. Keep ONLY the exact bundle of square hollow metal post sections inside the white inset. Preserve square openings, number, arrangement, silver finish and perspective. Remove all white rectangular inset backgrounds, all fence scene backgrounds, cyan graphic blocks, captions, lettering, frames and advertising layout. Center the extracted product at a comfortable scale with generous negative space, on a uniform seamless near-black background #090909 that reaches every outer edge. Subtle contact shadow only, restrained neutral studio illumination to retain actual product details. No text, no logo, no invented features, no decorative glow, no gold recoloring of the actual product. Landscape 3:2 composition. Faithful photo editing of source objects; preserve identity and finish.",
+      "original": "public/images/catalog/refined/posts.png",
+      "web": "public/images/catalog/refined/posts.webp"
+    },
+    {
+      "id": "rails",
+      "path": "/home/terrerov/.codex/generated_images/01a0d8ff-618a-7c10-9ee6-57a2fe87fe12/exec-3f990beb-dcb4-4714-8e59-252cf55504f0.png",
+      "prompt": "Edit target: supplied product collage. Create a clean product cutout presentation for the elegant black/steel/muted gold Durafencemetal website. Keep ONLY the exact single rectangular hollow metal rail inside the white inset. Preserve its rectangular opening, proportions, silver finish and perspective. Remove all white rectangular inset backgrounds, all fence scene backgrounds, cyan graphic blocks, captions, lettering, frames and advertising layout. Center the extracted product at a comfortable scale with generous negative space, on a uniform seamless near-black background #090909 that reaches every outer edge. Subtle contact shadow only, restrained neutral studio illumination to retain actual product details. No text, no logo, no invented features, no decorative glow, no gold recoloring of the actual product. Landscape 3:2 composition. Faithful photo editing of source objects; preserve identity and finish.",
+      "original": "public/images/catalog/refined/rails.png",
+      "web": "public/images/catalog/refined/rails.webp"
+    },
+    {
+      "id": "caps",
+      "path": "/home/terrerov/.codex/generated_images/01a0d8ff-618a-7c10-9ee6-57a2fe87fe12/exec-a46a8ed7-7773-462a-8cd3-65d6fc4dbbf6.png",
+      "prompt": "Edit target: supplied product collage. Create a clean product cutout presentation for the elegant black/steel/muted gold Durafencemetal website. Keep ONLY both exact pyramid-shaped square post caps from the white insets, one BLACK cap and one WHITE cap, side by side. Preserve geometry, material colors, pyramid facets and proportions; make the black cap visible with a restrained rim light. Remove all white rectangular inset backgrounds, all fence scene backgrounds, cyan graphic blocks, captions, lettering, frames and advertising layout. Center the extracted product at a comfortable scale with generous negative space, on a uniform seamless near-black background #090909 that reaches every outer edge. Subtle contact shadow only, restrained neutral studio illumination to retain actual product details. No text, no logo, no invented features, no decorative glow, no gold recoloring of the actual product. Landscape 3:2 composition. Faithful photo editing of source objects; preserve identity and finish.",
+      "original": "public/images/catalog/refined/caps.png",
+      "web": "public/images/catalog/refined/caps.webp"
+    },
+    {
+      "id": "screws-5-16",
+      "path": "/home/terrerov/.codex/generated_images/01a0d8ff-618a-7c10-9ee6-57a2fe87fe12/exec-26f2897f-1942-4148-8111-d4938801b2b4.png",
+      "prompt": "Edit target: supplied product collage. Create a clean product cutout presentation for the elegant black/steel/muted gold Durafencemetal website. Keep ONLY the exact three silver hex-head self-drilling screws from the white inset. Preserve count, arrangement, threads, heads and drilling tips. Remove all white rectangular inset backgrounds, all fence scene backgrounds, cyan graphic blocks, captions, lettering, frames and advertising layout. Center the extracted product at a comfortable scale with generous negative space, on a uniform seamless near-black background #090909 that reaches every outer edge. Subtle contact shadow only, restrained neutral studio illumination to retain actual product details. No text, no logo, no invented features, no decorative glow, no gold recoloring of the actual product. Landscape 3:2 composition. Faithful photo editing of source objects; preserve identity and finish.",
+      "original": "public/images/catalog/refined/screws-5-16.png",
+      "web": "public/images/catalog/refined/screws-5-16.webp"
+    },
+    {
+      "id": "screws-2",
+      "path": "/home/terrerov/.codex/generated_images/01a0d8ff-618a-7c10-9ee6-57a2fe87fe12/exec-f6b91d9e-25fc-459a-b567-bbbcd1dea632.png",
+      "prompt": "Edit target: supplied product collage. Create a clean product cutout presentation for the elegant black/steel/muted gold Durafencemetal website. Keep ONLY the exact single upright silver hex-head self-drilling screw inside the white inset. Preserve single screw, head geometry, threads and drilling tip. Remove all white rectangular inset backgrounds, all fence scene backgrounds, cyan graphic blocks, captions, lettering, frames and advertising layout. Center the extracted product at a comfortable scale with generous negative space, on a uniform seamless near-black background #090909 that reaches every outer edge. Subtle contact shadow only, restrained neutral studio illumination to retain actual product details. No text, no logo, no invented features, no decorative glow, no gold recoloring of the actual product. Landscape 3:2 composition. Faithful photo editing of source objects; preserve identity and finish.",
+      "original": "public/images/catalog/refined/screws-2.png",
+      "web": "public/images/catalog/refined/screws-2.webp"
+    }
+  ]
+}

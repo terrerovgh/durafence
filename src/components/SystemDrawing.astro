@@ -1,0 +1,40 @@
+---
+interface Props {
+  name: 'privacy' | 'ornamental' | 'entry';
+}
+
+const { name } = Astro.props;
+const pickets = [52, 68, 84, 100, 116, 132, 148, 164, 180, 196, 212, 228, 244, 260];
+const spears = [56, 80, 104, 128, 152, 176, 200, 224, 248];
+---
+
+<svg class="h-auto w-full text-gold" viewBox="0 0 320 150" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="square" aria-hidden="true">
+  {name === 'privacy' && (
+    <g>
+      <path d="M16 132h288" opacity=".45"></path>
+      <path d="M36 132V34h10v98M274 132V34h10v98"></path>
+      <path d="M46 42h228"></path>
+      {pickets.map((x) => <path d={`M${x} 42v90`}></path>)}
+    </g>
+  )}
+  {name === 'ornamental' && (
+    <g>
+      <path d="M16 132h288" opacity=".45"></path>
+      <path d="M36 132V28h8v104M276 132V28h8v104"></path>
+      <path d="M44 48h232M44 108h232"></path>
+      {spears.map((x) => (
+        <path d={`M${x} 108V58l8-12 8 12v50`}></path>
+      ))}
+    </g>
+  )}
+  {name === 'entry' && (
+    <g>
+      <path d="M16 132h288" opacity=".45"></path>
+      <path d="M78 132V26h12v106M230 132V26h12v106"></path>
+      <path d="M90 40h140v78H90Z"></path>
+      <path d="M90 40l140 78M102 118V52h116"></path>
+      <path d="M214 78h10v14h-10Z"></path>
+      <path d="M230 70c28 8 42 28 42 52" stroke-dasharray="3 4" opacity=".7"></path>
+    </g>
+  )}
+</svg>

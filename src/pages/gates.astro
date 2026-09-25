@@ -1,0 +1,66 @@
+---
+import Base from '../layouts/Base.astro';
+import { catalogImageSrc } from '../data/catalog-presentation';
+import CatalogImage from '../components/CatalogImage.astro';
+import CatalogCredit from '../components/CatalogCredit.astro';
+import ProductSpecs from '../components/ProductSpecs.astro';
+import { gates } from '../data/gates';
+import { gallery } from '../data/catalog';
+---
+<Base title="Pedestrian & Driveway Gates in South Georgia | Dura Fence Metal" description="Metal pedestrian gates and double swing driveway gates in South Georgia. Compare widths, heights and finishes, then price them with the estimator.">
+  <header class="frame page-open !pb-10">
+    <p class="kicker">Access that belongs with your fence</p>
+    <h1 class="page-title">Metal gates</h1>
+    <p class="lede">Choose a pedestrian entrance or a pair of swinging leaves. Coordinate the opening, frame and finish with the rest of your privacy fence.</p>
+    <nav class="mt-8 flex flex-wrap gap-6" aria-label="Gate types">
+      {gates.map((gate) => <a class="link-quiet" href={`#${gate.id}`}>{gate.name}</a>)}
+    </nav>
+    <CatalogCredit />
+  </header>
+  {gates.map((gate, index) => (
+    <section id={gate.id} class="border-t border-line" aria-labelledby={`${gate.id}-title`}>
+      <div class="frame grid items-start gap-10 md:grid-cols-2">
+        <CatalogImage image={gate.image} alt={gate.alt} eager={index === 0} />
+        <div>
+          <p class="kicker">{String(index + 1).padStart(2, '0')} / Gate styles</p>
+          <h2 id={`${gate.id}-title`} class="mt-3 text-3xl font-semibold tracking-tight">{gate.name}</h2>
+          <p class="mt-4 text-muted">{gate.description}</p>
+          <ProductSpecs product={gate} />
+          <a class="link-quiet mt-6 inline-block" href="/quote/">Request this gate</a>
+        </div>
+      </div>
+    </section>
+  ))}
+  <section class="border-t border-line" aria-labelledby="gate-gallery-title">
+    <div class="frame">
+      <p class="kicker">Details in context</p>
+      <h2 id="gate-gallery-title" class="mt-3 text-3xl font-semibold">Gate examples</h2>
+      <div class="mt-8 grid gap-8 md:grid-cols-3">
+        {gallery.slice(2).map((item) => (
+          <figure>
+            <a href={catalogImageSrc(item.image)} aria-label={`View full image: ${item.title}`}><CatalogImage image={item.image} alt={item.alt} /></a>
+            <figcaption class="mt-3">{item.title}</figcaption>
+          </figure>
+        ))}
+      </div>
+      <CatalogCredit />
+    </div>
+  </section>
+  <section class="border-t border-line" aria-labelledby="gate-price-title">
+    <div class="frame grid gap-10 md:grid-cols-2">
+      <div>
+        <p class="kicker">Dura Fence Metal estimates</p>
+        <h2 id="gate-price-title" class="mt-3 text-3xl font-semibold">Add gates to your project</h2>
+        <p class="lede">Our estimate sheet includes the fence package’s gate, additional 3, 6 and 12 ft gates, and aluminum woven gates. Enter your quantities and dimensions there for the applicable prices.</p>
+        <a class="btn-steel mt-6" href="/estimate/">Build your estimate</a>
+      </div>
+      <div>
+        <h3 class="text-xl font-semibold">Other sizes and configurations</h3>
+        <p class="mt-3 text-muted">For catalog sizes or hardware combinations outside the estimate sheet, request a quote with your preferred style, width, height and finish.</p>
+        <h3 class="mt-6 text-xl font-semibold">Aluminum woven gates</h3>
+        <p class="mt-3 text-muted">This option is already part of our estimator and is priced by width, with installation or materials only. Specify the required opening when you contact us.</p>
+        <a class="link-quiet mt-5 inline-block" href="/quote/">Discuss your gate</a>
+      </div>
+    </div>
+  </section>
+</Base>

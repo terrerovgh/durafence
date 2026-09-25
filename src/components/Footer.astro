@@ -1,0 +1,32 @@
+---
+import { nav, site, telHref } from '../data/site';
+
+const phone = site.phone.trim();
+const email = site.email.trim();
+---
+
+<footer class="border-t border-line">
+  <div class="frame !py-12 sm:!py-16">
+    <div class="grid gap-10 md:grid-cols-[1.2fr_1fr_1fr]">
+      <div>
+        <p class="font-display text-lg tracking-[.04em] text-steel">{site.shortName}</p>
+        <p class="mt-3 max-w-[16rem] text-sm leading-relaxed text-balance text-muted">{site.tagline}</p>
+      </div>
+      <nav aria-label="Footer">
+        <ul class="flex flex-col gap-2">
+          {nav.map((item) => (
+            <li><a class="nav-link" href={item.href}>{item.label}</a></li>
+          ))}
+          <li><a class="nav-link" href="/quote/">Request a quote</a></li>
+        </ul>
+      </nav>
+      <div class="text-sm leading-relaxed text-muted">
+        <p class="kicker">South Georgia</p>
+        <p class="mt-3">Metal privacy fences, gates, planks and parts.</p>
+        {phone && <p class="mt-3"><a class="link-quiet" href={telHref(phone)}>{phone}</a></p>}
+        {email && <p class="mt-2"><a class="link-quiet" href={`mailto:${email}`}>{email}</a></p>}
+        <p class="mt-4"><a class="link-quiet" href="/privacy/">Privacy</a></p>
+      </div>
+    </div>
+  </div>
+</footer>

@@ -1,0 +1,26 @@
+---
+import Base from '../layouts/Base.astro';
+import { site } from '../data/site';
+---
+
+<Base
+  title="Service Area in South Georgia | Dura Fence Metal"
+  description="Dura Fence Metal installs metal fences and gates across South Georgia, including Valdosta, Tifton, Moultrie, Thomasville, Waycross, and nearby towns."
+>
+  <header class="frame page-open">
+    <p class="kicker">Dura Fence Metal</p>
+    <h1 class="page-title">Service area in South Georgia</h1>
+    <p class="lede">
+      We serve South Georgia with metal privacy fences, matching gates and fence components.
+      Choose materials only or installation in the estimator, then contact us to confirm arrangements for your property. If your town is not listed, send us the location with your request.
+    </p>
+    <ul class="mt-12 max-w-3xl border-t border-line" aria-label="Towns">
+      {site.cities.map((city) => (
+        <li class="border-b border-line py-4 text-lg tracking-[.14em] uppercase">{city}</li>
+      ))}
+    </ul>
+    <p class="mt-10">
+      <a class="btn-steel" href="/quote/">Request a quote</a>
+    </p>
+  </header>
+</Base>

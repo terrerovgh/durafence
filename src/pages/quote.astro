@@ -1,0 +1,19 @@
+---
+import Base from '../layouts/Base.astro';
+import QuoteForm from '../components/QuoteForm.astro';
+---
+
+<Base
+  title="Request a Quote in South Georgia | Dura Fence Metal"
+  description="Request metal privacy fences, gates, planks or parts from Dura Fence Metal in South Georgia. Share your dimensions, finish and quantities."
+>
+  <div class="frame page-open grid gap-12 lg:grid-cols-[minmax(0,20rem)_minmax(0,1fr)] lg:gap-20">
+    <header>
+      <p class="kicker">Estimate</p>
+      <h1 class="page-title">Request a quote</h1>
+      <p class="lede">Tell us the products you need and where the project is located. Include fence length, gate openings, preferred heights and finishes, or the names and quantities of individual parts.</p>
+      <p class="mt-4 max-w-prose text-muted">For fence packages, gates and extra screws, <a class="link-quiet" href="/estimate/">build your estimate</a> first. Use this request for individual components or configurations that need a separate quote.</p>
+    </header>
+    <QuoteForm />
+  </div>
+</Base>

@@ -1,0 +1,845 @@
+---
+import Monogram from './Monogram.astro';
+import { site } from '../data/site';
+import {
+  aluminumRate,
+  extraGateCatalog,
+  fencePackages,
+  formatMoney,
+  includedGateFt,
+  maxAluminumGates,
+  screwPricePerLb,
+} from '../data/estimate';
+
+interface Props {
+  placed?: 'page' | 'home';
+}
+
+const { placed = 'page' } = Astro.props;
+const home = placed === 'home';
+const packages = [fencePackages.premium, fencePackages.standard];
+const aluminumNote = `${formatMoney(aluminumRate.installed * 100)} a foot installed, or ${formatMoney(aluminumRate.materials * 100)} for materials only. Each gate includes posts every ${aluminumRate.postSpacingFt} ft and a closure.`;
+---
+
+<div data-estimate>
+  <div class:list={['frame', { 'page-open': !home }]}>
+    <header>
+      <p class="kicker">The package</p>
+      {home ? (
+        <h2 id="price-heading" class="mt-3 max-w-[16ch] text-3xl font-semibold tracking-tight sm:text-4xl">Materials and price</h2>
+      ) : (
+        <h1 class="page-title">Materials and price</h1>
+      )}
+      <p class="lede">Enter the run and the height, then choose the package. One bay is drawn to those rules. The order is the sheet beside it.</p>
+    </header>
+
+    <div class="mt-10 grid items-start gap-12 lg:grid-cols-[minmax(0,1.15fr)_minmax(17.5rem,24rem)] lg:gap-14">
+      <div>
+        <form data-estimate-form autocomplete="off">
+          <fieldset class="mb-8 border-0 p-0">
+            <legend class="kicker">Invoice details</legend>
+            <p class="mt-3 text-sm text-muted">Add the customer and project details to your printed invoice.</p>
+            <div class="mt-4 grid gap-4 sm:grid-cols-2">
+              <div><label class="kicker" for="invoice-customer">Customer / company</label><input class="field-input mt-2" id="invoice-customer" data-customer-field="name" autocomplete="name" maxlength="100" /></div>
+              <div><label class="kicker" for="invoice-contact">Phone / email</label><input class="field-input mt-2" id="invoice-contact" data-customer-field="contact" maxlength="120" /></div>
+              <div class="sm:col-span-2"><label class="kicker" for="invoice-address">Project address</label><input class="field-input mt-2" id="invoice-address" data-customer-field="address" autocomplete="street-address" maxlength="200" /></div>
+            </div>
+          </fieldset>
+          <fieldset class="border-0 p-0">
+            <legend class="kicker">Dimensions</legend>
+            <div class="mt-4 grid gap-6 sm:grid-cols-2">
+              <div>
+                <label class="kicker" for="estimate-length">Length in feet</label>
+                <input class="field-input mt-2" id="estimate-length" name="length" type="number" inputmode="decimal" min="0" max="5000" step="1" />
+                <p class="mt-2 text-sm text-white" id="estimate-length-error" data-error-for="length" hidden></p>
+              </div>
+              <div>
+                <label class="kicker" for="estimate-height">Height in feet</label>
+                <input class="field-input mt-2" id="estimate-height" name="height" type="number" inputmode="decimal" min="3" max="12" step="1" value="6" />
+                <p class="mt-2 text-sm text-white" id="estimate-height-error" data-error-for="height" hidden></p>
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset class="mt-8 border-0 p-0">
+            <legend class="kicker">Package</legend>
+            <div class="mt-4 grid gap-3">
+              {packages.map((pack) => (
+                <label class="choice flex items-start gap-3 border border-line px-3 py-3">
+                  <input class="accent-gold mt-1" type="radio" name="package" value={pack.id} checked={pack.id === 'premium'} />
+                  <span>
+                    <span class="block font-medium">{pack.name}</span>
+                    <span class="mt-1 block text-sm text-muted">
+                      {formatMoney(pack.installed * 100)}/ft installed, or {formatMoney(pack.materials * 100)}/ft materials only. Posts every {pack.postSpacingFt} ft. {pack.rails} rails. {pack.screwsPerPicket} screws per picket.
+                    </span>
+                  </span>
+                </label>
+              ))}
+            </div>
+            <div class="mt-4 grid gap-3 sm:grid-cols-2">
+              <label class="choice flex items-center gap-3 border border-line px-3 py-3">
+                <input class="accent-gold" type="radio" name="labor" value="installed" checked />
+                <span>Installed</span>
+              </label>
+              <label class="choice flex items-center gap-3 border border-line px-3 py-3">
+                <input class="accent-gold" type="radio" name="labor" value="materials" />
+                <span>Materials only</span>
+              </label>
+            </div>
+            <p class="mt-4 text-sm text-muted" data-rate-line></p>
+            <p class="mt-2 text-sm font-medium lg:hidden" data-inline-total>Total $0.00. Due with request $0.00.</p>
+          </fieldset>
+
+          <figure class="sheet mt-8">
+            <svg data-drawing role="img" aria-labelledby="drawing-title"></svg>
+            <figcaption>
+              <p data-drawing-note>One bay. Enter the run to price the full line.</p>
+            </figcaption>
+          </figure>
+
+          <fieldset class="mt-10 border-0 p-0">
+            <legend class="kicker">Extra gates</legend>
+            <p class="mt-3 text-sm text-muted">The fence package includes one {includedGateFt} ft gate. Gates added here are extra openings.</p>
+            <div class="mt-4 grid gap-3">
+              {extraGateCatalog.map((gate) => (
+                <div class="flex items-center justify-between gap-4 border border-line px-3 py-3">
+                  <span>
+                    <span class="block">{gate.name}</span>
+                    <span class="mt-1 block text-sm text-muted">{formatMoney(gate.price * 100)}</span>
+                  </span>
+                  <span class="flex items-center gap-1">
+                    <button class="inline-flex h-11 w-11 items-center justify-center text-xl text-gold" type="button" data-step={gate.id} data-dir="-1" aria-label={`Remove a ${gate.name}`}>−</button>
+                    <span class="min-w-6 text-center tabular-nums" data-count={gate.id}>0</span>
+                    <button class="inline-flex h-11 w-11 items-center justify-center text-xl text-gold" type="button" data-step={gate.id} data-dir="1" aria-label={`Add a ${gate.name}`}>+</button>
+                  </span>
+                  <input type="hidden" name={gate.id} value="0" />
+                </div>
+              ))}
+            </div>
+          </fieldset>
+
+          <fieldset class="mt-10 border-0 p-0">
+            <legend class="kicker">Extra screws</legend>
+            <div class="mt-4">
+              <label class="kicker" for="estimate-screws">Pounds</label>
+              <input class="field-input mt-2" id="estimate-screws" name="screws" type="number" inputmode="decimal" min="0" max="10000" step="0.01" data-note="estimate-screw-note" aria-describedby="estimate-screw-note" />
+              <p class="mt-2 text-sm text-white" id="estimate-screws-error" data-error-for="screws" hidden></p>
+              <p class="mt-2 text-sm text-muted" id="estimate-screw-note" data-screw-note>More than the package is weighed at {formatMoney(screwPricePerLb * 100)} a pound.</p>
+            </div>
+          </fieldset>
+
+          <fieldset class="mt-10 border-0 p-0">
+            <legend class="kicker">Aluminum woven gates</legend>
+            <p class="mt-3 max-w-prose text-sm text-muted">{aluminumNote}</p>
+            <div class="mt-4" data-aluminum-list></div>
+            <button class="btn-steel mt-4 disabled:opacity-40" type="button" data-add-aluminum>Add a gate</button>
+            <p class="mt-3 text-sm text-muted" data-aluminum-cap hidden>{maxAluminumGates} gates fit on this sheet. Add the rest in the quote.</p>
+            <ul class="mt-4 space-y-2 text-sm text-white" data-loose-issues hidden></ul>
+          </fieldset>
+        </form>
+      </div>
+
+      <aside class="receipt lg:sticky lg:top-[calc(var(--header-h)+1rem)] lg:max-h-[calc(100svh-var(--header-h)-2rem)] lg:overflow-y-auto" aria-labelledby="order-title">
+        <div class="brand">
+          <span class="brand-mark">
+            <Monogram idPrefix="receipt" crop class="h-full w-full" />
+          </span>
+          <div>
+            <p class="shop">Dura Fence Metal</p>
+            <p class="where">South Georgia</p>
+          </div>
+        </div>
+        {home ? <h3 id="order-title" class="order-title">Order</h3> : <h2 id="order-title" class="order-title">Order</h2>}
+        <p data-receipt-intro>Enter a length or add a gate.</p>
+        <div data-receipt-body></div>
+        <p class="subtotal" data-receipt-subtotal hidden></p>
+        <div class="code">
+          <label class="due-label" for="discount-code">Discount code</label>
+          <input class="code-input" id="discount-code" data-discount-code name="discount" autocomplete="off" spellcheck="false" maxlength="12" aria-describedby="discount-error" />
+          <p class="code-error" id="discount-error" data-discount-error hidden></p>
+        </div>
+        <p class="discount" data-discount-row hidden>
+          <span>
+            <span class="due-label">Discount</span>
+            <span class="due-note" data-discount-note></span>
+          </span>
+          <span data-discount-amount>$0.00</span>
+        </p>
+        <label class="pay">
+          <input class="pay-box" type="checkbox" data-pay-card name="pay-card" />
+          <span>
+            <span class="due-label">Pay with card</span>
+            <span class="due-note">Card adds 7% tax. Cash does not.</span>
+          </span>
+        </label>
+        <p class="tax">
+          <span>
+            <span class="due-label">Tax</span>
+            <span class="due-note" data-tax-note>Cash. No tax.</span>
+          </span>
+          <span data-tax-amount>$0.00</span>
+        </p>
+        <div aria-live="polite" aria-atomic="true">
+          <p class="total">
+            <span>Total</span>
+            <span data-total-amount>$0.00</span>
+          </p>
+          <p class="due">
+            <span>
+              <span class="due-label">Due with request</span>
+              <span class="due-note">25% of the total</span>
+            </span>
+            <span data-deposit-amount>$0.00</span>
+          </p>
+        </div>
+        <p class="fine" data-caveat hidden>Corners, and a gate opening taken out of this length, can change the post count. The price follows the footage.</p>
+        <a class="btn-steel go" href="/quote/" data-quote-link>Request a quote</a>
+        <button class="btn-steel go print-btn" type="button" data-print-invoice disabled>Print / Save PDF</button>
+      </aside>
+    </div>
+  </div>
+
+  <article data-invoice aria-label="Dura Fence Metal invoice">
+    <header class="inv-head">
+      <div class="inv-brand">
+        <span class="inv-mark">
+          <Monogram idPrefix="invoice" crop class="h-full w-full" />
+        </span>
+      </div>
+      <div>
+        <p class="inv-name">{site.name}</p>
+        <p class="inv-where">{site.region}</p>
+        <p class="inv-tag">{site.tagline}</p>
+        <p class="inv-contact"><a href={`tel:${site.phone.replace(/\D/g, '')}`}>{site.phone}</a><span> / </span><a href="https://durafencemetal.com">durafencemetal.com</a></p>
+      </div>
+      <div class="inv-meta">
+        <p class="inv-kicker">Invoice</p>
+      </div>
+    </header>
+    <div class="inv-client">
+      <div><p class="inv-label">Bill to</p><p class="inv-client-name" data-invoice-customer="name">Not provided</p><p data-invoice-customer="contact"></p></div>
+      <div><p class="inv-label">Project location</p><p data-invoice-customer="address">Not provided</p></div>
+    </div>
+    <div class="inv-body">
+      <figure class="inv-drawing">
+        <div class="inv-section-head"><h2>Technical drawing</h2><span>NOT TO SCALE</span></div>
+        <div data-invoice-drawing></div>
+        <figcaption data-invoice-caption></figcaption>
+        <div class="inv-install"><h3 class="inv-label">Installation & materials</h3><p data-invoice-installation></p><p>Typical bay shown. Confirm dimensions, corners, gate openings and site conditions before fabrication or installation.</p></div>
+        <p class="inv-note" data-invoice-note></p>
+      </figure>
+      <div class="inv-order" data-invoice-order></div>
+    </div>
+    <div class="inv-footer"><span>{site.name} / {site.region}</span><span>Thank you for choosing Dura Fence Metal.</span></div>
+  </article>
+
+  <template id="aluminum-template">
+    <div data-aluminum-row class="mt-3 border border-line px-3 py-3">
+      <div class="flex items-start justify-between gap-4">
+        <div class="min-w-0 flex-1">
+          <label data-width-label class="kicker" for="">Width in feet</label>
+          <input class="field-input mt-2" data-aluminum-width type="number" inputmode="decimal" min="0" max="5000" step="0.01" />
+        </div>
+        <button class="nav-link mt-1 shrink-0" type="button" data-remove-aluminum>Remove</button>
+      </div>
+      <div class="mt-3 grid gap-3 sm:grid-cols-2">
+        <label class="choice flex items-center gap-3 border border-line px-3 py-3">
+          <input class="accent-gold" type="radio" value="installed" checked />
+          <span>Installed, {formatMoney(aluminumRate.installed * 100)}/ft</span>
+        </label>
+        <label class="choice flex items-center gap-3 border border-line px-3 py-3">
+          <input class="accent-gold" type="radio" value="materials" />
+          <span>Materials only, {formatMoney(aluminumRate.materials * 100)}/ft</span>
+        </label>
+      </div>
+      <p class="mt-2 text-sm text-white" data-error hidden></p>
+    </div>
+  </template>
+</div>
+
+<style>
+  .choice:has(input:checked) {
+    border-color: var(--color-gold);
+  }
+
+  .sheet {
+    margin: 0;
+    background: #f3f0e8;
+    border: 1px solid #d7d0c4;
+  }
+
+  .sheet svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .sheet figcaption {
+    padding: 0.75rem 0.9rem 0.95rem;
+    color: #3c3934;
+    font-size: 0.85rem;
+  }
+
+  .receipt {
+    background: #f6f3ec;
+    color: #1c1c1c;
+    padding: 1.35rem 1.2rem 1.45rem;
+    box-shadow: inset 0 0 0 1px #d7d0c4;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+  }
+
+  .brand-mark {
+    display: block;
+    width: 2.55rem;
+    height: 2.35rem;
+    flex: none;
+  }
+
+  .brand-mark :global(svg) {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .shop {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+  }
+
+  .where {
+    margin-top: 0.25rem;
+    color: #5c574e;
+    font-size: 0.85rem;
+  }
+
+  .order-title {
+    margin-top: 0.9rem;
+    padding-top: 0.75rem;
+    border-top: 3px double #1c1c1c;
+    font-size: 1.7rem;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+
+  .receipt [data-receipt-intro] {
+    margin-top: 0.85rem;
+    color: #5c574e;
+  }
+
+  .receipt :global(.spec) {
+    display: grid;
+    gap: 0.35rem;
+    margin: 1rem 0 0;
+  }
+
+  .receipt :global(.spec div) {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    font-size: 0.92rem;
+  }
+
+  .receipt :global(.spec dt) {
+    color: #5c574e;
+  }
+
+  .receipt :global(.spec dd) {
+    margin: 0;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .receipt :global(.group) {
+    margin-top: 0.9rem;
+    padding-top: 0.75rem;
+    border-top: 1px dashed #b9b2a6;
+  }
+
+  .receipt :global(.group-label) {
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+
+  .receipt :global(.group ul) {
+    margin: 0.35rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .receipt :global(.group li) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.75rem;
+    align-items: baseline;
+    padding: 0.32rem 0;
+  }
+
+  .receipt :global(.name),
+  .receipt :global(.detail) {
+    display: block;
+  }
+
+  .receipt :global(.detail),
+  .receipt :global(.note) {
+    color: #5c574e;
+    font-size: 0.82rem;
+  }
+
+  .receipt :global(.amt) {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .receipt :global(.sub) {
+    margin-top: 0.15rem;
+    border-top: 1px solid #1c1c1c;
+    font-weight: 600;
+  }
+
+  .subtotal,
+  .total {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .subtotal {
+    margin-top: 1rem;
+    padding-top: 0.7rem;
+    border-top: 1px solid #1c1c1c;
+  }
+
+  .total {
+    margin-top: 0.35rem;
+    padding-top: 0.45rem;
+    border-top: 3px double #1c1c1c;
+    font-size: 1.35rem;
+    font-weight: 600;
+  }
+
+  .code {
+    margin-top: 0.95rem;
+  }
+
+  .code-input {
+    width: 100%;
+    margin-top: 0.35rem;
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid #1c1c1c;
+    border-radius: 0;
+    color: #1c1c1c;
+    font: inherit;
+    font-size: 1rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.4rem 0;
+  }
+
+  .code-input::placeholder {
+    color: #8a847a;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  .code-input[aria-invalid='true'] {
+    border-bottom-color: #8a2a1a;
+  }
+
+  .code-error {
+    margin-top: 0.35rem;
+    color: #8a2a1a;
+    font-size: 0.8rem;
+  }
+
+  .discount {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    align-items: baseline;
+    margin-top: 0.75rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .pay {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    margin-top: 0.9rem;
+  }
+
+  .pay-box {
+    width: 1.05rem;
+    height: 1.05rem;
+    margin-top: 0.15rem;
+    accent-color: #1c1c1c;
+  }
+
+  .tax {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    align-items: baseline;
+    margin-top: 0.75rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .due {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    align-items: baseline;
+    margin-top: 0.85rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .due-label {
+    display: block;
+    font-weight: 600;
+  }
+
+  .due-note {
+    display: block;
+    margin-top: 0.15rem;
+    color: #5c574e;
+    font-size: 0.8rem;
+    font-weight: 400;
+  }
+
+  .fine {
+    margin-top: 0.85rem;
+    color: #5c574e;
+    font-size: 0.8rem;
+    line-height: 1.45;
+  }
+
+  .go {
+    width: 100%;
+    margin-top: 1rem;
+  }
+
+  .receipt button.print-btn {
+    margin-top: 0.55rem;
+    background: transparent;
+    color: #1c1c1c;
+    border: 1px solid #1c1c1c;
+  }
+
+  .receipt button.print-btn:disabled {
+    opacity: 0.4;
+  }
+
+  [data-invoice] {
+    display: none;
+    background: #fff;
+    color: #111;
+    font-family: Barlow, Arial, sans-serif;
+  }
+
+  .inv-head {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    flex: none;
+    padding: 0 0 0.18in;
+    border-bottom: 3px solid #b9854b;
+  }
+
+  .inv-brand {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.18rem;
+    width: 0.65in;
+    flex: none;
+  }
+
+  .inv-mark {
+    display: block;
+    width: 0.65in;
+    height: 0.65in;
+    padding: 0.06in;
+    background: #191919;
+  }
+
+  .inv-mark :global(svg) {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .inv-name {
+    font-size: 1.08rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    line-height: 1.1;
+    text-transform: uppercase;
+  }
+
+  .inv-where,
+  .inv-tag,
+  .inv-meta {
+    color: #333;
+    font-size: 0.68rem;
+    line-height: 1.25;
+  }
+
+  .inv-tag {
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .inv-meta {
+    margin-left: auto;
+    text-align: right;
+    flex: none;
+    line-height: 1.6;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .inv-kicker {
+    color: #111;
+    font-size: 1.5rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    line-height: 1;
+    text-transform: uppercase;
+  }
+
+  .inv-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+    gap: 0.24in;
+    align-items: start;
+    margin-top: 0.2in;
+  }
+
+  .inv-order {
+    min-width: 0;
+  }
+
+  .inv-order :global(.slip) {
+    display: block;
+    box-sizing: border-box;
+    padding: 0;
+    background: #fff;
+  }
+
+  .inv-order :global(.slip-title) {
+    margin: 0;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #b9854b;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    line-height: 1.3;
+    text-transform: uppercase;
+  }
+
+  .inv-order :global(.specs) {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.14rem 0.55rem;
+    margin: 0.5rem 0 0;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid #e4e4e4;
+    font-size: 0.7rem;
+    line-height: 1.3;
+  }
+
+  .inv-order :global(.specs dt) {
+    color: #444;
+  }
+
+  .inv-order :global(.specs dd) {
+    margin: 0;
+    font-weight: 600;
+    text-align: right;
+  }
+
+  .inv-order :global(.slip-kicker) {
+    margin: 0.6rem 0 0.2rem;
+    padding: 0.3rem 0.4rem;
+    background: #f3f0e8;
+    border-left: 2px solid #b9854b;
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  .inv-order :global(.slip-row) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.15rem 0.4rem;
+    align-items: baseline;
+    padding: 0.22rem 0;
+    border-bottom: 1px solid #e6e6e6;
+    font-size: 0.72rem;
+    line-height: 1.25;
+    break-inside: avoid;
+    overflow-wrap: anywhere;
+  }
+
+  .inv-order :global(.slip-name),
+  .inv-order :global(.slip-detail) {
+    display: block;
+  }
+
+  .inv-order :global(.slip-detail) {
+    margin-top: 0.04rem;
+    color: #555;
+    font-size: 0.62rem;
+  }
+
+  .inv-order :global(.slip-amt) {
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .inv-order :global(.slip-sub) {
+    border-bottom: 1px solid #ddd;
+    font-weight: 600;
+  }
+
+  .inv-order :global(.slip-totals) {
+    margin-top: 0.6rem;
+    padding-top: 0.3rem;
+    border-top: 2px solid #222;
+    break-inside: avoid;
+  }
+
+  .inv-order :global(.slip-total) {
+    margin-top: 0.08rem;
+    padding: 0.45rem;
+    background: #191919;
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  .inv-order :global(.slip-due) {
+    font-weight: 600;
+    padding: 0.4rem;
+    background: #f3f0e8;
+  }
+
+  .inv-order :global(.slip-notes) {
+    margin-top: 0.5rem;
+    padding-top: 0.3rem;
+    color: #333;
+    font-size: 0.64rem;
+    line-height: 1.35;
+  }
+
+  .inv-order :global(.slip-notes p + p) {
+    margin-top: 0.16rem;
+  }
+
+  .inv-drawing {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    break-inside: avoid;
+  }
+
+  .inv-drawing :global(svg) {
+    display: block;
+    width: 100%;
+    height: auto;
+    margin-top: 0.6rem;
+    border: 1px solid #d7d1c6;
+  }
+
+  .inv-drawing figcaption,
+  .inv-note {
+    margin-top: 0.2rem;
+    color: #333;
+    font-size: 0.62rem;
+    line-height: 1.3;
+  }
+
+  .inv-contact { margin-top: 0.35rem; font-size: 0.72rem; font-weight: 600; }
+  .inv-contact span { color: #9b7143; padding-inline: 0.2rem; }
+  .inv-client { display: grid; grid-template-columns: 1fr 1fr; gap: 0.3in; padding: 0.16in 0; border-bottom: 1px solid #d7d1c6; font-size: 0.78rem; line-height: 1.5; overflow-wrap: anywhere; break-inside: avoid; }
+  .inv-label { color: #70502c; font-size: 0.62rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 0.25rem; }
+  .inv-client-name { font-weight: 600; }
+  .inv-section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 0.5rem; border-bottom: 1px solid #b9854b; padding-bottom: 0.5rem; }
+  .inv-section-head h2 { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; line-height: 1.3; }
+  .inv-section-head span { font-size: 0.5rem; white-space: nowrap; color: #555; }
+  .inv-install { margin-top: 0.8rem; padding: 0.6rem; border: 1px solid #d7d1c6; font-size: 0.7rem; line-height: 1.5; }
+  .inv-install p + p { margin-top: 0.5rem; color: #555; }
+  .inv-footer { display: flex; justify-content: space-between; gap: 1rem; margin-top: 0.25in; padding-top: 0.1in; border-top: 1px solid #b9854b; color: #555; font-size: 0.6rem; break-inside: avoid; }
+  .inv-order :global(.slip-kicker) { break-after: avoid; }
+
+  @media print {
+    :global(html),
+    :global(body),
+    :global(main) {
+      background: #fff !important;
+      color: #111 !important;
+    }
+
+    :global(html),
+    :global(body),
+    [data-invoice] {
+      background: #fff !important;
+      print-color-adjust: exact;
+      -webkit-print-color-adjust: exact;
+    }
+
+    :global(.skip),
+    :global([data-header]),
+    :global(footer),
+    :global(astro-dev-toolbar) {
+      display: none !important;
+    }
+
+    :global(main > section:not(:has([data-invoice]))) {
+      display: none !important;
+    }
+
+    :global(main > section:has([data-invoice])) {
+      border: 0;
+    }
+
+    :global([data-estimate] .frame) {
+      display: none !important;
+    }
+
+    [data-invoice] {
+      display: block;
+      position: static;
+      box-sizing: border-box;
+      width: auto;
+      height: auto;
+      margin: 0;
+      padding: 0;
+      overflow: visible;
+      clip: auto;
+      clip-path: none;
+      pointer-events: auto;
+      background: #fff !important;
+    }
+
+    @page {
+      size: letter;
+      margin: 0;
+      background: #fff;
+    }
+  }
+</style>
+
+<script>
+  import { mountEstimate } from '../scripts/estimate';
+  mountEstimate();
+</script>

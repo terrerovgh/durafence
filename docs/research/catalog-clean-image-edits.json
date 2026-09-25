@@ -1,0 +1,69 @@
+{
+  "tool": "Built-in image_gen",
+  "edits": [
+    {
+      "id": "planks-clean",
+      "path": "/home/terrerov/.codex/generated_images/01a0d8ff-618a-7c10-9ee6-57a2fe87fe12/exec-e4100597-ed6a-4313-8406-5124f8ff3402.png",
+      "prompt": "Precise crop/cleanup edit of the supplied existing image for a website. Retain only the central photograph of the vertical bronze, wood-pattern, white and galvanized metal fence planks. Remove the black outer margins, bottom advertising caption and cyan corner. Photo fills the entire rectangular canvas edge-to-edge. Preserve the source subject and composition as faithfully as possible. No redesign of the product. CRITICAL: NO gradients, NO vignette, NO fade, NO blur, NO shadow, NO soft edges, NO white decorative border, NO black decorative border, NO rounded corners baked into the image. Clean sharp rectangular photo, natural original colors and even original lighting all the way to each edge. Output a standalone clean image; the website handles rounded corners.",
+      "file": "refined/planks-clean.webp",
+      "width": 1200,
+      "height": 816,
+      "usedOnWebsite": true
+    },
+    {
+      "id": "paint-clean",
+      "path": "/home/terrerov/.codex/generated_images/01a0d8ff-618a-7c10-9ee6-57a2fe87fe12/exec-93be6ddb-28e1-49c8-8c42-86bbd583e962.png",
+      "prompt": "Precise crop/cleanup edit of the supplied existing image for a website. Retain only the photograph of the many spray cans. Remove black outer margins, advertising caption and cyan corner. Photo fills the entire rectangular canvas edge-to-edge. Preserve the source subject and composition as faithfully as possible. No redesign of the product. CRITICAL: NO gradients, NO vignette, NO fade, NO blur, NO shadow, NO soft edges, NO white decorative border, NO black decorative border, NO rounded corners baked into the image. Clean sharp rectangular photo, natural original colors and even original lighting all the way to each edge. Output a standalone clean image; the website handles rounded corners.",
+      "file": "refined/paint-clean.webp",
+      "width": 1200,
+      "height": 816,
+      "usedOnWebsite": true
+    },
+    {
+      "id": "sample-clean",
+      "path": "/home/terrerov/.codex/generated_images/01a0d8ff-618a-7c10-9ee6-57a2fe87fe12/exec-96cb8695-8506-4b5c-93a8-9fdd7d166879.png",
+      "prompt": "Precise crop/cleanup edit of the supplied existing image for a website. Retain the two side-by-side photographs of the dark and white fence rail sides. Remove black outer margins, advertising caption and cyan corner. Photo fills the entire rectangular canvas edge-to-edge. Preserve the source subject and composition as faithfully as possible. No redesign of the product. CRITICAL: NO gradients, NO vignette, NO fade, NO blur, NO shadow, NO soft edges, NO white decorative border, NO black decorative border, NO rounded corners baked into the image. Clean sharp rectangular photo, natural original colors and even original lighting all the way to each edge. Output a standalone clean image; the website handles rounded corners.",
+      "file": "refined/sample-clean.webp",
+      "width": 1200,
+      "height": 816,
+      "usedOnWebsite": true
+    },
+    {
+      "id": "white-fence-clean",
+      "path": "/home/terrerov/.codex/generated_images/01a0d8ff-618a-7c10-9ee6-57a2fe87fe12/exec-b1ba691e-2f69-4545-a75a-e313e182e77e.png",
+      "prompt": "Precise crop/cleanup edit of the supplied existing image for a website. Crop away only the white vertical left and right margins. Retain the actual white privacy fence photograph, tree, house, sidewalk and natural colors. Photo fills the entire rectangular canvas edge-to-edge. Preserve the source subject and composition as faithfully as possible. No redesign of the product. CRITICAL: NO gradients, NO vignette, NO fade, NO blur, NO shadow, NO soft edges, NO white decorative border, NO black decorative border, NO rounded corners baked into the image. Clean sharp rectangular photo, natural original colors and even original lighting all the way to each edge. Output a standalone clean image; the website handles rounded corners.",
+      "file": "refined/white-fence-clean.webp",
+      "width": 1200,
+      "height": 827,
+      "usedOnWebsite": true
+    },
+    {
+      "id": "pedestrian-clean",
+      "path": "/home/terrerov/.codex/generated_images/01a0d8ff-618a-7c10-9ee6-57a2fe87fe12/exec-7445ab60-136f-4a8f-93e1-be1a4dfa8fbe.png",
+      "prompt": "Precise crop/cleanup edit of the supplied existing image for a website. Remove the very large white outer mat on all four sides, keeping ONLY the center rectangular photograph of the white pedestrian gate, house and walkway. Photo fills the entire rectangular canvas edge-to-edge. Preserve the source subject and composition as faithfully as possible. No redesign of the product. CRITICAL: NO gradients, NO vignette, NO fade, NO blur, NO shadow, NO soft edges, NO white decorative border, NO black decorative border, NO rounded corners baked into the image. Clean sharp rectangular photo, natural original colors and even original lighting all the way to each edge. Output a standalone clean image; the website handles rounded corners.",
+      "file": "refined/pedestrian-clean.webp",
+      "width": 1200,
+      "height": 827,
+      "usedOnWebsite": true
+    },
+    {
+      "id": "sliding-clean",
+      "path": "/home/terrerov/.codex/generated_images/01a0d8ff-618a-7c10-9ee6-57a2fe87fe12/exec-af6d2fcc-500c-40c5-affa-7cc6643bc6ee.png",
+      "prompt": "Precise crop/cleanup edit of the supplied existing image for a website. Crop away the white vertical side margins. Retain the complete sliding gate photo with its rails and natural colors. Photo fills the entire rectangular canvas edge-to-edge. Preserve the source subject and composition as faithfully as possible. No redesign of the product. CRITICAL: NO gradients, NO vignette, NO fade, NO blur, NO shadow, NO soft edges, NO white decorative border, NO black decorative border, NO rounded corners baked into the image. Clean sharp rectangular photo, natural original colors and even original lighting all the way to each edge. Output a standalone clean image; the website handles rounded corners.",
+      "file": "refined/sliding-clean.webp",
+      "width": 1200,
+      "height": 827,
+      "usedOnWebsite": true
+    },
+    {
+      "id": "drawing-clean",
+      "path": "/home/terrerov/.codex/generated_images/01a0d8ff-618a-7c10-9ee6-57a2fe87fe12/exec-165713d4-f432-4542-9b41-8fa18174cf5a.png",
+      "prompt": "Precise crop/cleanup edit of the supplied existing image for a website. Retain the rectangular engineering drawing sheet at the bottom right only, as a tight crop of that exact existing sheet. Remove the rest of the collage, green advertising background, photo panels and title. Do not add or invent text or measurements. Keep the white paper and black diagram intact, with no blank outer margins beyond the sheet. This is the actual reference illustration, not a new technical drawing. Preserve the source subject and composition as faithfully as possible. No redesign of the product. CRITICAL: NO gradients, NO vignette, NO fade, NO blur, NO shadow, NO soft edges, NO white decorative border, NO black decorative border, NO rounded corners baked into the image. Clean sharp rectangular photo, natural original colors and even original lighting all the way to each edge. Output a standalone clean image; the website handles rounded corners.",
+      "file": "refined/drawing-clean.webp",
+      "width": 1200,
+      "height": 827,
+      "usedOnWebsite": false,
+      "note": "Rejected for publication: retain the actual reference drawing rather than regenerated technical text."
+    }
+  ]
+}

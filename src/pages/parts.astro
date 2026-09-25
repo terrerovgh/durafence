@@ -1,0 +1,38 @@
+---
+import Base from '../layouts/Base.astro';
+import CatalogImage from '../components/CatalogImage.astro';
+import CatalogCredit from '../components/CatalogCredit.astro';
+import ProductSpecs from '../components/ProductSpecs.astro';
+import { parts } from '../data/catalog';
+---
+<Base title="Planks, Parts & Hardware in South Georgia | Dura Fence Metal" description="Metal fence planks, square posts, rails and self-tapping screws for privacy fences in South Georgia. Compare sizes and finishes, then request what you need.">
+  <header class="frame page-open !pb-10">
+    <p class="kicker">Build the complete fence</p>
+    <h1 class="page-title">Planks, parts & hardware</h1>
+    <p class="lede">Plan a new fence or match the pieces you need for an existing one. Find dimensions, finish options and hardware for the privacy fence system.</p>
+    <nav class="mt-8 flex flex-wrap gap-x-6 gap-y-3 text-sm" aria-label="Parts categories">
+      {parts.map((part) => <a class="link-quiet" href={`#${part.id}`}>{part.name}</a>)}
+    </nav>
+    <CatalogCredit />
+  </header>
+  <section class="border-t border-line" aria-label="Parts catalog">
+    <div class="frame grid gap-x-12 gap-y-16 md:grid-cols-2">
+      {parts.map((part) => (
+        <article id={part.id}>
+          <CatalogImage image={part.image} alt={part.alt} />
+          <h2 class="mt-6 text-2xl font-semibold tracking-tight">{part.name}</h2>
+          <p class="mt-3 text-muted">{part.description}</p>
+          <ProductSpecs product={part} />
+          <a class="link-quiet mt-5 inline-block text-sm" href="/quote/">Request this part</a>
+        </article>
+      ))}
+    </div>
+  </section>
+  <section class="border-t border-line">
+    <div class="frame !py-12">
+      <h2 class="text-2xl font-semibold">Ordering a complete fence?</h2>
+      <p class="lede">Use our estimator for Standard and Premium fence packages, additional gates and extra screws. Individual parts are quoted on request.</p>
+      <a class="btn-steel mt-6" href="/estimate/">Build your estimate</a>
+    </div>
+  </section>
+</Base>

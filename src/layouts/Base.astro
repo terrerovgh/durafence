@@ -1,0 +1,132 @@
+---
+import '../styles/global.css';
+import '@fontsource/michroma/latin-400.css';
+import '@fontsource/barlow/latin-400.css';
+import '@fontsource/barlow/latin-500.css';
+import '@fontsource/barlow/latin-600.css';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { schemaPhone, site, siteUrl } from '../data/site';
+import { trades } from '../data/services';
+
+interface Props {
+  title: string;
+  description: string;
+  noindex?: boolean;
+}
+
+const { title, description, noindex = false } = Astro.props;
+const origin = (Astro.site ?? new URL(siteUrl)).toString().replace(/\/$/, '');
+const path = Astro.url.pathname.endsWith('/') ? Astro.url.pathname : `${Astro.url.pathname}/`;
+const canonical = new URL(path, `${origin}/`).toString();
+const image = new URL('/og.jpg', `${origin}/`).toString();
+const imageAlt = `${site.name} — metal privacy fences, gates, and parts in ${site.region}`;
+const robots = noindex
+  ? 'noindex, nofollow'
+  : 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1';
+const businessId = `${origin}/#business`;
+const websiteId = `${origin}/#website`;
+
+const graph = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'HomeAndConstructionBusiness',
+      '@id': businessId,
+      name: site.name,
+      slogan: site.tagline,
+      url: `${origin}/`,
+      image,
+      logo: image,
+      description: site.description,
+      ...(site.phone.trim() ? { telephone: schemaPhone(site.phone) } : {}),
+      ...(site.email.trim() ? { email: site.email.trim() } : {}),
+      areaServed: [
+        { '@type': 'State', name: 'Georgia' },
+        { '@type': 'AdministrativeArea', name: site.region },
+        ...site.cities.map((name) => ({
+          '@type': 'City',
+          name,
+          containedInPlace: { '@type': 'State', name: 'Georgia' },
+        })),
+      ],
+      hasOfferCatalog: {
+        '@type': 'OfferCatalog',
+        name: 'Metal privacy fences, gates, planks and parts',
+        itemListElement: trades.map((trade) => ({
+          '@type': 'Offer',
+          itemOffered: {
+            '@type': 'Service',
+            name: trade.title,
+            description: trade.summary,
+            areaServed: site.region,
+          },
+        })),
+      },
+    },
+    {
+      '@type': 'WebSite',
+      '@id': websiteId,
+      url: `${origin}/`,
+      name: site.name,
+      description: site.description,
+      inLanguage: 'en-US',
+      publisher: { '@id': businessId },
+    },
+    {
+      '@type': 'WebPage',
+      '@id': `${canonical}#webpage`,
+      url: canonical,
+      name: title,
+      description,
+      isPartOf: { '@id': websiteId },
+      about: { '@id': businessId },
+      inLanguage: 'en-US',
+      primaryImageOfPage: { '@type': 'ImageObject', url: image, width: 1200, height: 630 },
+    },
+  ],
+};
+
+const jsonLd = JSON.stringify(graph).replace(/</g, '\\u003c');
+---
+
+<!doctype html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#090909" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="robots" content={robots} />
+    <meta name="application-name" content={site.name} />
+    {!noindex && <link rel="canonical" href={canonical} />}
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap-index.xml" />
+    <meta property="og:site_name" content={site.name} />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    {!noindex && <meta property="og:url" content={canonical} />}
+    <meta property="og:image" content={image} />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={imageAlt} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={image} />
+    <meta name="twitter:image:alt" content={imageAlt} />
+    <script type="application/ld+json" set:html={jsonLd}></script>
+  </head>
+  <body class="flex min-h-screen flex-col bg-ink text-steel antialiased">
+    <a class="skip" href="#content">Skip to content</a>
+    <Header />
+    <main id="content" class="flex-1">
+      <slot />
+    </main>
+    <Footer />
+  </body>
+</html>

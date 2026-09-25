@@ -1,0 +1,110 @@
+---
+import Monogram from './Monogram.astro';
+import { nav, site, telHref } from '../data/site';
+
+const current = Astro.url.pathname.replace(/\/$/, '') || '/';
+const isCurrent = (href: string) => (href.split('#')[0].replace(/\/$/, '') || '/') === current;
+const phone = site.phone.trim();
+---
+
+<header data-header class="fixed inset-x-0 top-0 z-40">
+  <div class="mx-auto flex h-[var(--header-h)] w-full max-w-[1120px] items-center gap-6 px-5 pt-[env(safe-area-inset-top,0px)] sm:px-8">
+    <a href="/" class="flex items-center gap-3 text-steel no-underline" aria-label={`${site.name} home`}>
+      <Monogram idPrefix="nav" crop class="h-10 w-11" />
+      <span class="font-display hidden text-[13px] tracking-[.04em] sm:inline">{site.shortName}</span>
+    </a>
+
+    <nav class="ml-auto hidden items-center gap-7 lg:flex" aria-label="Primary">
+      {nav.map((item) => (
+        <a class="nav-link" href={item.href} aria-current={isCurrent(item.href) ? 'page' : undefined}>{item.label}</a>
+      ))}
+      {phone && <a class="nav-link" href={telHref(phone)}>Call</a>}
+      <a class="btn-steel" href="/quote/" aria-current={isCurrent('/quote/') ? 'page' : undefined}>Request a quote</a>
+    </nav>
+
+    <div class="ml-auto flex items-center gap-3 lg:hidden">
+      {phone && <a class="nav-link" href={telHref(phone)}>Call</a>}
+      <a class="btn-steel" href="/quote/">Quote</a>
+      <button type="button" class="nav-link" data-menu-button aria-expanded="false" aria-controls="site-menu">Menu</button>
+    </div>
+  </div>
+</header>
+
+<div id="site-menu" data-menu hidden class="fixed inset-0 z-50 flex flex-col bg-ink px-6 pt-[var(--header-h)] pb-10" role="dialog" aria-modal="true" aria-label="Menu">
+  <div class="flex justify-end">
+    <button type="button" class="nav-link" data-menu-close>Close</button>
+  </div>
+  <nav class="mt-12 flex flex-col gap-7" aria-label="Mobile">
+    {nav.map((item) => (
+      <a class="text-3xl font-semibold tracking-tight text-steel no-underline" href={item.href} aria-current={isCurrent(item.href) ? 'page' : undefined}>{item.label}</a>
+    ))}
+    <a class="btn-steel mt-4 w-fit" href="/quote/">Request a quote</a>
+  </nav>
+  <p class="mt-auto pt-10 text-xs tracking-[.35em] text-muted uppercase">{site.region}</p>
+</div>
+
+<script>
+  const header = document.querySelector('[data-header]');
+  const menu = document.querySelector<HTMLElement>('[data-menu]');
+  const openButton = document.querySelector<HTMLButtonElement>('[data-menu-button]');
+  const closeButton = document.querySelector<HTMLButtonElement>('[data-menu-close]');
+  const main = document.querySelector('main');
+  const footer = document.querySelector('footer');
+  const skip = document.querySelector('.skip');
+
+  const onScroll = () => header?.classList.toggle('is-stuck', window.scrollY > 8);
+  onScroll();
+  window.addEventListener('scroll', onScroll, { passive: true });
+
+  const focusable = () =>
+    menu ? [...menu.querySelectorAll<HTMLElement>('a, button')].filter((el) => !el.hasAttribute('disabled')) : [];
+
+  function setOpen(open: boolean) {
+    if (!menu || !openButton) return;
+    openButton.setAttribute('aria-expanded', String(open));
+    if (open) {
+      menu.removeAttribute('hidden');
+      document.body.classList.add('overflow-hidden');
+      main?.setAttribute('inert', '');
+      footer?.setAttribute('inert', '');
+      header?.setAttribute('inert', '');
+      skip?.setAttribute('inert', '');
+      closeButton?.focus();
+    } else {
+      menu.setAttribute('hidden', '');
+      document.body.classList.remove('overflow-hidden');
+      main?.removeAttribute('inert');
+      footer?.removeAttribute('inert');
+      header?.removeAttribute('inert');
+      skip?.removeAttribute('inert');
+      openButton.focus();
+    }
+  }
+
+  openButton?.addEventListener('click', () => setOpen(true));
+  closeButton?.addEventListener('click', () => setOpen(false));
+
+  menu?.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      setOpen(false);
+      return;
+    }
+    if (event.key !== 'Tab') return;
+    const items = focusable();
+    if (items.length === 0) return;
+    const first = items[0];
+    const last = items[items.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  });
+
+  const desktop = window.matchMedia('(min-width: 1024px)');
+  desktop.addEventListener('change', (event) => {
+    if (event.matches && openButton?.getAttribute('aria-expanded') === 'true') setOpen(false);
+  });
+</script>

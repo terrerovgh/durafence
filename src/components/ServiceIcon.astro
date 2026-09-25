@@ -1,0 +1,33 @@
+---
+import type { TradeIcon } from '../data/services';
+
+interface Props {
+  name: TradeIcon;
+  class?: string;
+}
+
+const { name, class: className = 'h-7 w-7' } = Astro.props;
+---
+
+{name === 'home' && (
+  <svg class={className} viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="square" aria-hidden="true">
+    <path d="m3 15 13-11 13 11M7 13v15h18V13M13 28v-9h6v9M24 5v5"></path>
+  </svg>
+)}
+{name === 'building' && (
+  <svg class={className} viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="square" aria-hidden="true">
+    <path d="M5 29V6l16-4v27M21 12l6 2v15M2 29h28M10 10h2m3-1h2m-7 6h2m3-1h2m-7 6h2m3-1h2m-7 6h2m3-1h2m7-6h1m-1 5h1"></path>
+  </svg>
+)}
+{name === 'shield' && (
+  <svg class={className} viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true">
+    <path d="M16 2 28 7v9c0 7-4.5 11-12 14C8.5 27 4 23 4 16V7Z"></path>
+    <path d="m10 16 4 4 8-9"></path>
+  </svg>
+)}
+{name === 'gear' && (
+  <svg class={className} viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" aria-hidden="true">
+    <path d="M13 2h6l.7 3.4 2.5 1 2.9-1.9 4.2 4.2-1.9 2.9 1 2.5L32 15v5l-3.6.7-1 2.5 1.9 2.9-4.2 4.2-2.9-1.9-2.5 1L19 32h-6l-.7-3.6-2.5-1-2.9 1.9-4.2-4.2 1.9-2.9-1-2.5L0 19v-4l3.6-.9 1-2.5-1.9-2.9 4.2-4.2 2.9 1.9 2.5-1Z" transform="translate(2 0) scale(.88)"></path>
+    <circle cx="16" cy="17" r="4"></circle>
+  </svg>
+)}

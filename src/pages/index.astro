@@ -1,0 +1,89 @@
+---
+import Base from '../layouts/Base.astro';
+import BrandLockup from '../components/BrandLockup.astro';
+import CatalogImage from '../components/CatalogImage.astro';
+import CatalogCredit from '../components/CatalogCredit.astro';
+import { site } from '../data/site';
+import { featured } from '../data/services';
+import { steps } from '../data/process';
+---
+
+<Base
+  title="Dura Fence Metal | Privacy Fences, Gates & Parts in South Georgia"
+  description="Metal privacy fences, pedestrian and driveway gates, planks and parts in South Georgia. Explore the catalog and calculate a Standard or Premium estimate."
+>
+  <section class="stage overflow-x-hidden px-5 pt-[var(--header-h)] pb-16">
+    <div class="flex min-h-[calc(100svh-var(--header-h))] items-center">
+      <BrandLockup />
+    </div>
+  </section>
+
+  <section class="border-t border-line" aria-labelledby="metal-heading">
+    <div class="frame">
+      <p class="kicker">The complete fence system</p>
+      <h2 id="metal-heading" class="mt-3 max-w-[14ch] text-3xl font-semibold tracking-tight sm:text-4xl">Privacy, access & every part</h2>
+      <p class="lede">Metal privacy fencing, matching gates and the components that connect them. Explore the styles and finishes, then build your estimate with Dura Fence Metal.</p>
+      <ul class="mt-12 grid gap-px bg-line lg:grid-cols-3">
+        {featured.map((item) => (
+          <li class="bg-ink px-0 py-8 sm:px-6 lg:py-10">
+            <CatalogImage image={item.image} alt={item.alt} />
+            <h3 class="mt-6 text-xl font-semibold tracking-tight">{item.name}</h3>
+            <p class="mt-3 text-muted">{item.spec}</p>
+            <a class="link-quiet mt-5 inline-block text-sm" href={item.href}>Explore {item.name.toLowerCase()}</a>
+          </li>
+        ))}
+      </ul>
+      <CatalogCredit />
+      <div class="mt-8 flex flex-wrap items-center gap-6"><a class="btn-steel" href="/estimate/">Build your estimate</a><a class="link-quiet" href="/services/#finishes">View finishes</a></div>
+    </div>
+  </section>
+
+  <section class="border-t border-line" aria-labelledby="process-heading">
+    <div class="frame">
+      <p class="kicker">From selection to installation</p>
+      <h2 id="process-heading" class="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">Plan your project</h2>
+      <ol class="mt-12 grid gap-10 sm:grid-cols-2 lg:grid-cols-4 lg:gap-8">
+        {steps.map((step, index) => (
+          <li class:list={['lg:pl-6', { 'lg:border-l lg:border-line': index > 0 }]}>
+            <p class="kicker">{step.n}</p>
+            <h3 class="mt-3 text-xl font-semibold tracking-tight">{step.title}</h3>
+            <p class="mt-3 text-muted">{step.body}</p>
+          </li>
+        ))}
+      </ol>
+    </div>
+  </section>
+
+  <section class="border-t border-line" aria-labelledby="area-heading">
+    <div class="frame">
+      <div class="flex items-center gap-5">
+        <span class="h-px flex-1 bg-gradient-to-r from-transparent to-[#8c8d90]/70" aria-hidden="true"></span>
+        <h2 id="area-heading" class="pl-[.35em] text-sm font-medium tracking-[.42em] uppercase sm:text-base sm:tracking-[.5em]">{site.region}</h2>
+        <span class="h-px flex-1 bg-gradient-to-l from-transparent to-[#8c8d90]/70" aria-hidden="true"></span>
+      </div>
+      <p class="lede mx-auto text-center">Fence materials and installation for properties across South Georgia. Contact us to confirm service at your location.</p>
+      <ul class="mx-auto mt-8 flex max-w-3xl flex-wrap justify-center gap-x-6 gap-y-3" aria-label="Towns">
+        {site.cities.map((city) => (
+          <li class="text-sm tracking-[.16em] uppercase">{city}</li>
+        ))}
+      </ul>
+      <p class="mt-8 text-center">
+        <a class="link-quiet" href="/service-area/">Service area</a>
+      </p>
+    </div>
+  </section>
+
+  <section class="stage border-t border-line" aria-labelledby="close-heading">
+    <div class="frame text-center">
+      <p class="metal-title text-[clamp(2rem,6vw,3.4rem)] leading-none font-normal tracking-[.04em] uppercase">{site.shortName}</p>
+      <div class="relative mx-auto mt-4 flex max-w-md items-center justify-center gap-4">
+        <span class="gold-rule h-px min-w-0 flex-1" aria-hidden="true"></span>
+        <p class="metal-subtitle pl-[.7em] text-2xl leading-none font-semibold tracking-[.7em] uppercase">{site.metal}</p>
+        <span class="gold-rule gold-rule-right h-px min-w-0 flex-1" aria-hidden="true"></span>
+      </div>
+      <h2 id="close-heading" class="mx-auto mt-10 max-w-[16ch] text-3xl font-semibold tracking-tight sm:text-4xl">Your fence. Your finish. Your estimate.</h2>
+      <p class="lede mx-auto">Start with the length of your fence. Compare packages, add gates and choose materials only or installation. For individual parts or a custom configuration, request a quote.</p>
+      <div class="mt-8 flex flex-wrap items-center justify-center gap-6"><a class="btn-steel" href="/estimate/">Calculate your price</a><a class="link-quiet" href="/quote/">Request a quote</a></div>
+    </div>
+  </section>
+</Base>

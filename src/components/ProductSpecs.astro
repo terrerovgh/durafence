@@ -1,0 +1,14 @@
+---
+import type { CatalogProduct } from '../data/catalog';
+interface Props { product: CatalogProduct; }
+const { product } = Astro.props;
+---
+<dl class="mt-6 border-t border-line text-sm">
+  {product.specs.map((spec) => (
+    <div class="grid grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)] gap-4 border-b border-line py-3">
+      <dt class="text-muted">{spec.label}</dt>
+      <dd>{spec.value}</dd>
+    </div>
+  ))}
+</dl>
+{product.note && <p class="mt-4 text-sm text-muted">{product.note}</p>}
