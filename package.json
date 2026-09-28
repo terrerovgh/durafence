@@ -10,7 +10,7 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "test": "node --experimental-strip-types --test src/data/estimate.test.ts"
+    "test": "node --experimental-strip-types --test src/data/estimate.test.ts src/data/estimate-mail.test.ts"
   },
   "devDependencies": {
     "@astrojs/sitemap": "^3.7.4",
@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@fontsource/barlow": "^5.3.0",
-    "@fontsource/michroma": "^5.3.0"
+    "@fontsource/michroma": "^5.3.0",
+    "pdf-lib": "^1.17.1"
   }
 }

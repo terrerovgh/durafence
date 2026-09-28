@@ -4,6 +4,7 @@
 
 interface Env {
   RESEND_API_KEY?: string;
+  RESENT_API_KEY?: string;
   QUOTE_TO?: string;
   QUOTE_FROM?: string;
 }
@@ -135,7 +136,7 @@ async function sendMail(env: Env, input: Record<string, string>, text: string): 
   const response = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: {
-      authorization: `Bearer ${env.RESEND_API_KEY}`,
+      authorization: `Bearer ${env.RESEND_API_KEY?.trim() || env.RESENT_API_KEY?.trim()}`,
       'content-type': 'application/json',
     },
     body: JSON.stringify({
@@ -173,7 +174,7 @@ export const onRequestPost = async (context: { request: Request; env: Env }) => 
   if (Object.keys(fields).length > 0) return fail(400, 'Check the form.', 'invalid', fields);
 
   const text = compose(payload);
-  if (!env.RESEND_API_KEY || !env.QUOTE_TO || !env.QUOTE_FROM) {
+  if (!(env.RESEND_API_KEY?.trim() || env.RESENT_API_KEY?.trim()) || !env.QUOTE_TO || !env.QUOTE_FROM) {
     return fail(503, 'The request was not sent.', 'not_configured', undefined, `<pre>${escapeHtml(text)}</pre>`);
   }
 

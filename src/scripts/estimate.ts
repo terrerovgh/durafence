@@ -22,6 +22,7 @@ import {
   type SheetLine,
 } from '../data/estimate';
 import { bayFromEstimate, drawBay } from './fence-drawing';
+import { customerErrors, type EstimateCustomer } from '../data/estimate-mail';
 
 function readDecimal(raw: string): number {
   const trimmed = raw.trim();
@@ -172,9 +173,11 @@ function fillInvoice(
   const printBtn = root.querySelector<HTMLButtonElement>('[data-print-invoice]');
 
   if (printBtn) printBtn.disabled = result.empty;
+  const emailBtn = root.querySelector<HTMLButtonElement>('[data-email-invoice]');
+  if (emailBtn && emailBtn.dataset.sending !== 'true') emailBtn.disabled = result.empty;
   root.querySelectorAll<HTMLElement>('[data-invoice-customer]').forEach((slot) => {
     const field = root.querySelector<HTMLInputElement>(`[data-customer-field="${slot.dataset.invoiceCustomer}"]`);
-    slot.textContent = field?.value.trim() || (slot.dataset.invoiceCustomer === 'contact' ? '' : 'Not provided');
+    slot.textContent = field?.value.trim() || 'Not provided';
   });
   const installation = root.querySelector<HTMLElement>('[data-invoice-installation]');
   if (installation) installation.textContent = result.hasFence
@@ -349,6 +352,103 @@ function pair(label: string, value: string): DocumentFragment {
   return fragment;
 }
 
+function readCustomer(root: HTMLElement): EstimateCustomer {
+  const value = (field: string) => root.querySelector<HTMLInputElement>(`[data-customer-field="${field}"]`)?.value.trim() ?? '';
+  return {
+    name: value('name'),
+    address: value('address'),
+    phone: value('phone'),
+    email: value('email'),
+  };
+}
+
+function setEmailStatus(root: HTMLElement, message: string, tone: '' | 'ok' | 'bad'): void {
+  const status = root.querySelector<HTMLElement>('[data-email-status]');
+  if (!status) return;
+  status.hidden = message.length === 0;
+  status.textContent = message;
+  if (tone) status.dataset.tone = tone;
+  else delete status.dataset.tone;
+}
+
+async function emailEstimate(root: HTMLElement, result: Estimate): Promise<void> {
+  const button = root.querySelector<HTMLButtonElement>('[data-email-invoice]');
+  if (!button || button.dataset.sending === 'true' || result.empty) return;
+
+  for (const field of ['customer-name', 'customer-phone', 'customer-email', 'customer-address', 'height', 'discount']) {
+    setFieldError(root, field, undefined);
+  }
+
+  const height = readHeight(root);
+  if (height.error) {
+    setFieldError(root, 'height', height.error);
+    setEmailStatus(root, height.error, 'bad');
+    return;
+  }
+  if (result.issues.length > 0) {
+    setEmailStatus(root, 'Fix the estimate before sending it.', 'bad');
+    return;
+  }
+  const discount = applyDiscount(result.totalCents, discountCode(root));
+  if (discount.error) {
+    setEmailStatus(root, discount.error, 'bad');
+    return;
+  }
+
+  const customer = readCustomer(root);
+  const errors = customerErrors(customer);
+  if (Object.keys(errors).length > 0) {
+    for (const [field, message] of Object.entries(errors)) setFieldError(root, field, message);
+    setEmailStatus(root, 'Check the customer details.', 'bad');
+    root.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
+    return;
+  }
+
+  button.dataset.sending = 'true';
+  button.disabled = true;
+  button.textContent = 'Sending';
+  setEmailStatus(root, 'Sending the estimate.', '');
+
+  try {
+    const response = await fetch('/api/estimate-email', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', accept: 'application/json' },
+      body: JSON.stringify({
+        customer,
+        estimate: {
+          ...readInput(root),
+          heightFt: height.feet,
+          payByCard: payByCard(root),
+          discountCode: discountCode(root).trim(),
+        },
+        df_leave_blank: root.querySelector<HTMLInputElement>('[data-honeypot]')?.value ?? '',
+      }),
+    });
+    let body: { ok?: boolean; message?: string; fields?: Record<string, string> } = {};
+    try {
+      body = await response.json();
+    } catch {
+      body = {};
+    }
+    if (!response.ok || !body.ok) {
+      if (body.fields) {
+        for (const [field, message] of Object.entries(body.fields)) {
+          if (typeof message === 'string') setFieldError(root, field, message);
+        }
+      }
+      setEmailStatus(root, body.message || 'The estimate was not sent. Try again in a minute.', 'bad');
+      return;
+    }
+    setEmailStatus(root, body.message || `Sent to ${customer.email}. A copy went to the shop.`, 'ok');
+  } catch {
+    setEmailStatus(root, 'The estimate was not sent. Try again in a minute.', 'bad');
+  } finally {
+    delete button.dataset.sending;
+    button.textContent = 'Email PDF';
+    button.disabled = priceEstimate(readInput(root)).empty;
+  }
+}
+
 function readHeight(root: HTMLElement): { feet: number; error?: string } {
   const raw = root.querySelector<HTMLInputElement>('#estimate-height')?.value ?? '';
   if (!raw.trim()) return { feet: 6, error: 'Enter a height from 3 to 12 feet.' };
@@ -467,6 +567,14 @@ export function mountEstimate(): void {
   root.querySelector('[data-pay-card]')?.addEventListener('change', update);
   root.querySelector('[data-discount-code]')?.addEventListener('input', update);
   root.querySelector('[data-print-invoice]')?.addEventListener('click', () => window.print());
+  root.querySelector('[data-email-invoice]')?.addEventListener('click', () => {
+    void emailEstimate(root, latest);
+  });
+  root.addEventListener('input', () => {
+    const button = root.querySelector<HTMLButtonElement>('[data-email-invoice]');
+    if (button?.dataset.sending === 'true') return;
+    setEmailStatus(root, '', '');
+  });
 
   form.addEventListener('click', (event) => {
     const target = event.target;

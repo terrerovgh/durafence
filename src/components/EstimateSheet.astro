@@ -38,11 +38,32 @@ const aluminumNote = `${formatMoney(aluminumRate.installed * 100)} a foot instal
         <form data-estimate-form autocomplete="off">
           <fieldset class="mb-8 border-0 p-0">
             <legend class="kicker">Invoice details</legend>
-            <p class="mt-3 text-sm text-muted">Add the customer and project details to your printed invoice.</p>
+            <p class="mt-3 text-sm text-muted">These details go on the invoice and in the email to the customer.</p>
             <div class="mt-4 grid gap-4 sm:grid-cols-2">
-              <div><label class="kicker" for="invoice-customer">Customer / company</label><input class="field-input mt-2" id="invoice-customer" data-customer-field="name" autocomplete="name" maxlength="100" /></div>
-              <div><label class="kicker" for="invoice-contact">Phone / email</label><input class="field-input mt-2" id="invoice-contact" data-customer-field="contact" maxlength="120" /></div>
-              <div class="sm:col-span-2"><label class="kicker" for="invoice-address">Project address</label><input class="field-input mt-2" id="invoice-address" data-customer-field="address" autocomplete="street-address" maxlength="200" /></div>
+              <div>
+                <label class="kicker" for="invoice-customer">Customer / company</label>
+                <input class="field-input mt-2" id="invoice-customer" name="customer-name" data-customer-field="name" autocomplete="name" maxlength="100" />
+                <p class="mt-2 text-sm text-white" id="invoice-customer-error" data-error-for="customer-name" hidden></p>
+              </div>
+              <div>
+                <label class="kicker" for="invoice-phone">Phone</label>
+                <input class="field-input mt-2" id="invoice-phone" name="customer-phone" data-customer-field="phone" type="tel" autocomplete="tel" inputmode="tel" maxlength="40" />
+                <p class="mt-2 text-sm text-white" id="invoice-phone-error" data-error-for="customer-phone" hidden></p>
+              </div>
+              <div>
+                <label class="kicker" for="invoice-email">Email</label>
+                <input class="field-input mt-2" id="invoice-email" name="customer-email" data-customer-field="email" type="email" autocomplete="email" maxlength="120" />
+                <p class="mt-2 text-sm text-white" id="invoice-email-error" data-error-for="customer-email" hidden></p>
+              </div>
+              <div class="sm:col-span-2">
+                <label class="kicker" for="invoice-address">Project address</label>
+                <input class="field-input mt-2" id="invoice-address" name="customer-address" data-customer-field="address" autocomplete="street-address" maxlength="200" />
+                <p class="mt-2 text-sm text-white" id="invoice-address-error" data-error-for="customer-address" hidden></p>
+              </div>
+            </div>
+            <div hidden>
+              <label for="invoice-leave-blank">Leave blank</label>
+              <input id="invoice-leave-blank" name="df_leave_blank" data-honeypot tabindex="-1" autocomplete="off" />
             </div>
           </fieldset>
           <fieldset class="border-0 p-0">
@@ -194,7 +215,10 @@ const aluminumNote = `${formatMoney(aluminumRate.installed * 100)} a foot instal
         </div>
         <p class="fine" data-caveat hidden>Corners, and a gate opening taken out of this length, can change the post count. The price follows the footage.</p>
         <a class="btn-steel go" href="/quote/" data-quote-link>Request a quote</a>
-        <button class="btn-steel go print-btn" type="button" data-print-invoice disabled>Print / Save PDF</button>
+        <button class="btn-steel go sheet-btn" type="button" data-print-invoice disabled>Print / Save PDF</button>
+        <button class="btn-steel go sheet-btn" type="button" data-email-invoice disabled aria-describedby="email-estimate-note">Email PDF</button>
+        <p class="fine" id="email-estimate-note">Sends the PDF to the customer and a copy to the shop.</p>
+        <p class="email-status" data-email-status role="status" hidden></p>
       </aside>
     </div>
   </div>
@@ -217,7 +241,7 @@ const aluminumNote = `${formatMoney(aluminumRate.installed * 100)} a foot instal
       </div>
     </header>
     <div class="inv-client">
-      <div><p class="inv-label">Bill to</p><p class="inv-client-name" data-invoice-customer="name">Not provided</p><p data-invoice-customer="contact"></p></div>
+      <div><p class="inv-label">Bill to</p><p class="inv-client-name" data-invoice-customer="name">Not provided</p><p data-invoice-customer="phone">Not provided</p><p data-invoice-customer="email">Not provided</p></div>
       <div><p class="inv-label">Project location</p><p data-invoice-customer="address">Not provided</p></div>
     </div>
     <div class="inv-body">
@@ -527,15 +551,26 @@ const aluminumNote = `${formatMoney(aluminumRate.installed * 100)} a foot instal
     margin-top: 1rem;
   }
 
-  .receipt button.print-btn {
+  .receipt button.sheet-btn {
     margin-top: 0.55rem;
     background: transparent;
     color: #1c1c1c;
     border: 1px solid #1c1c1c;
   }
 
-  .receipt button.print-btn:disabled {
+  .receipt button.sheet-btn:disabled {
     opacity: 0.4;
+  }
+
+  .email-status {
+    margin-top: 0.7rem;
+    color: #1c1c1c;
+    font-size: 0.8rem;
+    line-height: 1.45;
+  }
+
+  .email-status[data-tone='bad'] {
+    color: #6e2a1f;
   }
 
   [data-invoice] {

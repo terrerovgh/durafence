@@ -1,12 +1,25 @@
+import { estimateCopies, onRequestPost as onEstimateEmail } from '../functions/api/estimate-email';
 import { onRequestPost } from '../functions/api/quote';
+import { invoiceAddress } from '../src/data/estimate-mail';
 
 const CANONICAL_HOST = 'durafencemetal.com';
 
 interface Env {
   ASSETS: Fetcher;
   RESEND_API_KEY?: string;
+  RESENT_API_KEY?: string;
   QUOTE_TO?: string;
   QUOTE_FROM?: string;
+}
+
+type ForwardableMail = {
+  to: string;
+  forward(rcptTo: string): Promise<void>;
+  setReject(reason: string): void;
+};
+
+function sameAddress(left: string, right: string): boolean {
+  return left.trim().toLowerCase() === right.trim().toLowerCase();
 }
 
 function needsTrailingSlash(pathname: string): boolean {
@@ -17,6 +30,26 @@ function needsTrailingSlash(pathname: string): boolean {
 }
 
 export default {
+  async email(message: ForwardableMail): Promise<void> {
+    if (!sameAddress(message.to, invoiceAddress)) {
+      message.setReject('This address does not accept mail.');
+      return;
+    }
+    let delivered = 0;
+    for (const copy of estimateCopies) {
+      try {
+        await message.forward(copy);
+        delivered += 1;
+      } catch (error) {
+        console.error(JSON.stringify({
+          event: 'invoice_forward_failed',
+          message: error instanceof Error ? error.message : 'unknown',
+        }));
+      }
+    }
+    if (delivered === 0) message.setReject('Mailbox is not ready.');
+  },
+
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
     const method = request.method;
@@ -37,6 +70,10 @@ export default {
 
     if (url.pathname === '/api/quote' && method === 'POST') {
       return onRequestPost({ request, env });
+    }
+
+    if (url.pathname === '/api/estimate-email' && method === 'POST') {
+      return onEstimateEmail({ request, env });
     }
 
     const response = await env.ASSETS.fetch(request);
