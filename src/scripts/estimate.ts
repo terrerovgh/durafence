@@ -371,6 +371,67 @@ function setEmailStatus(root: HTMLElement, message: string, tone: '' | 'ok' | 'b
   else delete status.dataset.tone;
 }
 
+function estimatePayload(root: HTMLElement, heightFt: number) {
+  return {
+    customer: readCustomer(root),
+    estimate: {
+      ...readInput(root),
+      heightFt,
+      payByCard: payByCard(root),
+      discountCode: discountCode(root).trim(),
+    },
+    df_leave_blank: root.querySelector<HTMLInputElement>('[data-honeypot]')?.value ?? '',
+  };
+}
+
+async function printEstimate(root: HTMLElement, result: Estimate): Promise<void> {
+  if (result.empty) return;
+  const height = readHeight(root);
+  if (height.error) {
+    setFieldError(root, 'height', height.error);
+    setEmailStatus(root, height.error, 'bad');
+    return;
+  }
+  if (result.issues.length > 0) {
+    setEmailStatus(root, 'Fix the estimate before printing it.', 'bad');
+    return;
+  }
+  const discount = applyDiscount(result.totalCents, discountCode(root));
+  if (discount.error) {
+    setEmailStatus(root, discount.error, 'bad');
+    return;
+  }
+
+  const viewer = window.open('', '_blank');
+  if (!viewer) {
+    setEmailStatus(root, 'Allow pop-ups to open the PDF.', 'bad');
+    return;
+  }
+  viewer.opener = null;
+  try {
+    const response = await fetch('/api/estimate-pdf', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', accept: 'application/pdf' },
+      body: JSON.stringify(estimatePayload(root, height.feet)),
+    });
+    if (!response.ok) {
+      const error = await response.json() as { message?: string; fields?: Record<string, string> };
+      if (error.fields) {
+        for (const [field, message] of Object.entries(error.fields)) setFieldError(root, field, message);
+      }
+      setEmailStatus(root, error.message || 'The PDF could not be opened.', 'bad');
+      viewer.close();
+      return;
+    }
+    const pdfUrl = URL.createObjectURL(await response.blob());
+    viewer.location.href = pdfUrl;
+    window.addEventListener('pagehide', () => URL.revokeObjectURL(pdfUrl), { once: true });
+  } catch {
+    viewer.close();
+    setEmailStatus(root, 'The PDF could not be opened.', 'bad');
+  }
+}
+
 async function emailEstimate(root: HTMLElement, result: Estimate): Promise<void> {
   const button = root.querySelector<HTMLButtonElement>('[data-email-invoice]');
   if (!button || button.dataset.sending === 'true' || result.empty) return;
@@ -413,16 +474,7 @@ async function emailEstimate(root: HTMLElement, result: Estimate): Promise<void>
     const response = await fetch('/api/estimate-email', {
       method: 'POST',
       headers: { 'content-type': 'application/json', accept: 'application/json' },
-      body: JSON.stringify({
-        customer,
-        estimate: {
-          ...readInput(root),
-          heightFt: height.feet,
-          payByCard: payByCard(root),
-          discountCode: discountCode(root).trim(),
-        },
-        df_leave_blank: root.querySelector<HTMLInputElement>('[data-honeypot]')?.value ?? '',
-      }),
+      body: JSON.stringify(estimatePayload(root, height.feet)),
     });
     let body: { ok?: boolean; message?: string; fields?: Record<string, string> } = {};
     try {
@@ -566,7 +618,9 @@ export function mountEstimate(): void {
   form.addEventListener('change', update);
   root.querySelector('[data-pay-card]')?.addEventListener('change', update);
   root.querySelector('[data-discount-code]')?.addEventListener('input', update);
-  root.querySelector('[data-print-invoice]')?.addEventListener('click', () => window.print());
+  root.querySelector('[data-print-invoice]')?.addEventListener('click', () => {
+    void printEstimate(root, latest);
+  });
   root.querySelector('[data-email-invoice]')?.addEventListener('click', () => {
     void emailEstimate(root, latest);
   });

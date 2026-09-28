@@ -49,15 +49,15 @@ export type PreparedEstimate =
 
 const gateIds: ExtraGateId[] = ['ft12', 'ft6', 'ft3'];
 
-export function customerErrors(customer: EstimateCustomer): Record<string, string> {
+export function customerErrors(customer: EstimateCustomer, requireCustomer = true): Record<string, string> {
   const errors: Record<string, string> = {};
-  if (!customer.name || customer.name.length > 100) errors['customer-name'] = 'Enter the customer name.';
-  if (!customer.address || customer.address.length > 200) errors['customer-address'] = 'Enter the project address.';
+  if ((requireCustomer && !customer.name) || customer.name.length > 100) errors['customer-name'] = 'Enter the customer name.';
+  if ((requireCustomer && !customer.address) || customer.address.length > 200) errors['customer-address'] = 'Enter the project address.';
   const digits = customer.phone.replace(/\D/g, '');
-  if (digits.length < 7 || digits.length > 15 || customer.phone.length > 40) {
+  if ((requireCustomer || customer.phone) && (digits.length < 7 || digits.length > 15 || customer.phone.length > 40)) {
     errors['customer-phone'] = 'Enter a phone number.';
   }
-  if (customer.email.length > 120 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customer.email)) {
+  if (customer.email.length > 120 || ((requireCustomer || customer.email) && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customer.email))) {
     errors['customer-email'] = 'Enter the customer email.';
   }
   return errors;
@@ -72,13 +72,13 @@ export function formatSentOn(date: Date): string {
   }).format(date);
 }
 
-export function prepareEstimateLetter(input: unknown, sentOn: string): PreparedEstimate {
+export function prepareEstimateLetter(input: unknown, sentOn: string, requireCustomer = true): PreparedEstimate {
   if (!isRecord(input)) return invalid('The estimate could not be read.');
   if (oneLine(input.df_leave_blank).length > 0) return { ok: true, kind: 'honeypot' };
 
   const customer = readCustomer(input.customer);
   if (!customer) return invalid('The estimate could not be read.');
-  const fields = customerErrors(customer);
+  const fields = customerErrors(customer, requireCustomer);
 
   const job = readJob(input.estimate);
   if (!job) return invalid('The estimate could not be read.');

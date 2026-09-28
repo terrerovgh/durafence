@@ -1,4 +1,5 @@
 import { estimateCopies, onRequestPost as onEstimateEmail } from '../functions/api/estimate-email';
+import { onRequestPost as onEstimatePdf } from '../functions/api/estimate-pdf';
 import { onRequestPost } from '../functions/api/quote';
 import { invoiceAddress } from '../src/data/estimate-mail';
 
@@ -74,6 +75,10 @@ export default {
 
     if (url.pathname === '/api/estimate-email' && method === 'POST') {
       return onEstimateEmail({ request, env });
+    }
+
+    if (url.pathname === '/api/estimate-pdf' && method === 'POST') {
+      return onEstimatePdf({ request });
     }
 
     const response = await env.ASSETS.fetch(request);

@@ -1,8 +1,9 @@
-/** Letter-size PDF of a priced estimate. The drawing stays on the printed sheet. */
+/** The PDF shared by Print / Save PDF and Email PDF. */
 
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage, type RGB } from 'pdf-lib';
-import { formatFeetInches, formatReceiptMoney } from './estimate.ts';
+import { formatFeetInches, formatReceiptMoney, picketWidthIn, type Estimate } from './estimate.ts';
 import { letterTotals, type EstimateLetter } from './estimate-mail.ts';
+import { invoiceLogoPng } from './invoice-logo.ts';
 import { site } from './site.ts';
 
 const pageWidth = 612;
@@ -23,7 +24,8 @@ export async function buildEstimatePdf(letter: EstimateLetter): Promise<Uint8Arr
   doc.setCreator(site.name);
   const regular = await doc.embedFont(StandardFonts.Helvetica);
   const bold = await doc.embedFont(StandardFonts.HelveticaBold);
-  const sheet = new Sheet(doc, regular, bold);
+  const logo = await doc.embedPng(Uint8Array.from(atob(invoiceLogoPng), (char) => char.charCodeAt(0)));
+  const sheet = new Sheet(doc, regular, bold, logo);
   sheet.draw(letter);
   return doc.save();
 }
@@ -43,38 +45,50 @@ class Sheet {
   private doc: PDFDocument;
   private regular: PDFFont;
   private bold: PDFFont;
+  private logo: Awaited<ReturnType<PDFDocument['embedPng']>>;
 
-  constructor(doc: PDFDocument, regular: PDFFont, bold: PDFFont) {
+  constructor(doc: PDFDocument, regular: PDFFont, bold: PDFFont, logo: Awaited<ReturnType<PDFDocument['embedPng']>>) {
     this.doc = doc;
     this.regular = regular;
     this.bold = bold;
+    this.logo = logo;
     this.page = doc.addPage([pageWidth, pageHeight]);
     this.chrome(false);
   }
 
   draw(letter: EstimateLetter): void {
     const { customer, result } = letter;
-    this.pair('DURA FENCE METAL', 'INVOICE', 14, this.bold, ink);
+    this.page.drawRectangle({ x: margin, y: this.y - 52, width: 56, height: 52, color: ink });
+    this.page.drawImage(this.logo, { x: margin + 4, y: this.y - 50, width: 48, height: 44 });
+    this.page.drawText('DURA FENCE METAL', { x: margin + 68, y: this.y - 20, size: 14, font: this.bold, color: ink });
+    const invoiceWidth = this.bold.widthOfTextAtSize('INVOICE', 14);
+    this.page.drawText('INVOICE', { x: pageWidth - margin - invoiceWidth, y: this.y - 20, size: 14, font: this.bold, color: ink });
+    this.y -= 24;
     this.gap(2);
-    this.pair(site.region, letter.sentOn, 10, this.regular, muted);
-    this.line(`${site.phone}  /  durafencemetal.com`, 9, this.regular, muted);
-    this.gap(8);
+    this.page.drawText(pdfText(site.region), { x: margin + 68, y: this.y - 10, size: 9, font: this.regular, color: muted });
+    const dateWidth = this.regular.widthOfTextAtSize(pdfText(letter.sentOn), 10);
+    this.page.drawText(pdfText(letter.sentOn), { x: pageWidth - margin - dateWidth, y: this.y - 10, size: 10, font: this.regular, color: muted });
+    this.y -= 14;
+    this.page.drawText(`${site.phone}  /  durafencemetal.com`, { x: margin + 68, y: this.y - 8, size: 9, font: this.regular, color: muted });
+    this.y -= 20;
     this.horizontal(gold, 1.4);
     this.gap(12);
 
     const left = this.column(
-      ['BILL TO', customer.name, customer.phone, customer.email],
+      ['BILL TO', customer.name || 'Not provided', customer.phone, customer.email].filter(Boolean),
       margin,
       contentWidth / 2 - 12,
     );
     const right = this.column(
-      ['PROJECT LOCATION', customer.address],
+      ['PROJECT LOCATION', customer.address || 'Not provided'],
       margin + contentWidth / 2,
       contentWidth / 2,
     );
     this.y = Math.min(left, right) - 8;
     this.horizontal(rule, 0.6);
     this.gap(8);
+
+    this.technicalDrawing(result, letter.heightFt);
 
     this.heading('Order');
     this.moneyLine('Package', result.packageName);
@@ -131,6 +145,82 @@ class Sheet {
     this.gap(8);
     this.paragraph(`${site.name} / ${site.region}`, 9, muted);
     this.paragraph('Thank you for choosing Dura Fence Metal.', 9, muted);
+  }
+
+  private technicalDrawing(result: Estimate, heightFt: number): void {
+    this.need(235);
+    this.heading('Technical drawing');
+    const top = this.y - 3;
+    const bottom = top - 197;
+    this.page.drawRectangle({ x: margin, y: bottom, width: contentWidth, height: 197, borderColor: rule, borderWidth: 0.7 });
+    this.page.drawText('ELEVATION - ONE BAY / NOT TO SCALE', {
+      x: margin + 10, y: top - 15, size: 8, font: this.bold, color: muted,
+    });
+    if (!result.hasFence) {
+      this.page.drawText('Gate / accessory order - no fence elevation applicable.', {
+        x: margin + 12, y: top - 48, size: 10, font: this.regular, color: ink,
+      });
+      this.y = bottom - 14;
+      return;
+    }
+
+    // The printed sheet illustrates the same typical six-foot bay, regardless of requested height.
+    const count = Math.max(1, Math.round(result.postSpacingFt * 12 / picketWidthIn));
+    const left = margin + 56;
+    const right = margin + 286;
+    const postTop = top - 45;
+    const ground = top - 132;
+    const postBottom = ground - 28;
+    const postWidth = 9;
+    const picketLeft = left + postWidth;
+    const picketRight = right;
+    const spacing = (picketRight - picketLeft) / count;
+    const postColor = rgb(0.78, 0.79, 0.8);
+    const picketColor = rgb(0.9, 0.88, 0.84);
+    for (const x of [left, right]) {
+      this.page.drawRectangle({ x: x - 5, y: postBottom, width: 19, height: ground - postBottom, color: rgb(0.84, 0.83, 0.8), borderColor: ink, borderWidth: 0.5 });
+      this.page.drawRectangle({ x, y: postBottom, width: postWidth, height: postTop - postBottom, color: postColor, borderColor: ink, borderWidth: 0.8 });
+    }
+    for (let i = 0; i < count; i += 1) {
+      const x = picketLeft + i * spacing + 0.6;
+      const width = Math.max(1, spacing - 1.2);
+      this.page.drawSvgPath(`M 0 0 L 0 -75 L ${width / 2} -84 L ${width} -75 L ${width} 0 Z`, {
+        x, y: ground + 1, color: picketColor, borderColor: ink, borderWidth: 0.4,
+      });
+    }
+    const railYs = result.railCount === 3 ? [ground + 24, ground + 47, ground + 69] : [ground + 29, ground + 62];
+    for (const y of railYs) {
+      this.page.drawLine({ start: { x: picketLeft, y }, end: { x: picketRight, y }, thickness: 2, color: ink });
+      for (let i = 0; i < count; i += 1) {
+        this.page.drawCircle({ x: picketLeft + (i + 0.5) * spacing, y, size: 1.1, color: rgb(1, 1, 1), borderColor: ink, borderWidth: 0.4 });
+      }
+    }
+    this.page.drawLine({ start: { x: left - 15, y: ground }, end: { x: right + 24, y: ground }, thickness: 1, color: ink });
+    const dimY = top - 34;
+    this.page.drawLine({ start: { x: left + 4, y: dimY }, end: { x: right + 4, y: dimY }, thickness: 0.6, color: muted });
+    for (const x of [left + 4, right + 4]) {
+      this.page.drawLine({ start: { x, y: dimY - 4 }, end: { x, y: dimY + 4 }, thickness: 0.6, color: muted });
+    }
+    this.page.drawText(`${formatFeetInches(result.postSpacingFt)} O.C.`, { x: left + 79, y: dimY + 4, size: 8, font: this.bold, color: ink });
+    this.page.drawText('6 ft typical', { x: margin + 7, y: ground + 40, size: 7, font: this.regular, color: muted });
+    this.page.drawText('2 ft embed', { x: margin + 7, y: postBottom + 7, size: 7, font: this.regular, color: muted });
+
+    const detailX = margin + 319;
+    const details = [
+      result.packageName,
+      `${count} pointed pickets / bay`,
+      `${result.railCount} rails / bay`,
+      `${result.screwsPerPicket} screws / picket`,
+      `${picketWidthIn} in picket width`,
+      `Requested: ${formatFeetInches(heightFt)}`,
+    ];
+    details.forEach((detail, index) => {
+      this.page.drawText(pdfText(detail), { x: detailX, y: top - 46 - index * 18, size: 8, font: index === 0 ? this.bold : this.regular, color: ink });
+    });
+    this.page.drawText('Confirm dimensions and site conditions before fabrication.', {
+      x: margin + 10, y: bottom + 9, size: 8, font: this.regular, color: muted,
+    });
+    this.y = bottom - 14;
   }
 
   private chrome(continued: boolean): void {
