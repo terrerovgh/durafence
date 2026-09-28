@@ -23,8 +23,9 @@ El botón **Email PDF** en `/estimate/` envía el PDF con Resend desde
 `Dura Fence Metal <invoice@durafencemetal.com>`. El destinatario es el cliente;
 las copias ocultas van a `abelterreros@yahoo.com` y `allneedsdiscount1@gmail.com`.
 El Worker recalcula los precios y genera el PDF antes de enviarlo.
-**Print / Save PDF** abre ese mismo formato de PDF para imprimirlo o guardarlo;
-ambos incluyen el monograma y el dibujo técnico de la valla cuando corresponde.
+**Print / Save PDF** conserva la hoja original de impresión del navegador, con
+el monograma y el dibujo técnico. El PDF adjunto por correo reproduce ese diseño
+en una página, con el dibujo y los detalles del pedido en dos columnas.
 
 Configuración de producción:
 
