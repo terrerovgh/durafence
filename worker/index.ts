@@ -1,6 +1,7 @@
-import { estimateCopies, onRequestPost as onEstimateEmail } from '../functions/api/estimate-email';
-import { onRequestPost } from '../functions/api/quote';
-import { invoiceAddress } from '../src/data/estimate-mail';
+import { estimateCopies, onRequestPost as onEstimateEmail } from '../functions/api/estimate-email.ts';
+import { onRequestPost } from '../functions/api/quote.ts';
+import { invoiceAddress } from '../src/data/estimate-mail.ts';
+import { contactAddress, contactInboxes } from '../src/data/site.ts';
 
 const CANONICAL_HOST = 'durafencemetal.com';
 
@@ -8,8 +9,6 @@ interface Env {
   ASSETS: Fetcher;
   RESEND_API_KEY?: string;
   RESENT_API_KEY?: string;
-  QUOTE_TO?: string;
-  QUOTE_FROM?: string;
 }
 
 type ForwardableMail = {
@@ -31,6 +30,22 @@ function needsTrailingSlash(pathname: string): boolean {
 
 export default {
   async email(message: ForwardableMail): Promise<void> {
+    if (sameAddress(message.to, contactAddress)) {
+      let delivered = 0;
+      for (const inbox of contactInboxes) {
+        try {
+          await message.forward(inbox);
+          delivered += 1;
+        } catch (error) {
+          console.error(JSON.stringify({
+            event: 'contact_forward_failed',
+            message: error instanceof Error ? error.message : 'unknown',
+          }));
+        }
+      }
+      if (delivered === 0) message.setReject('Mailbox is not ready.');
+      return;
+    }
     if (!sameAddress(message.to, invoiceAddress)) {
       message.setReject('This address does not accept mail.');
       return;

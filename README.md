@@ -43,22 +43,31 @@ Configuración de producción:
 5. Desde `/estimate/`, completa un estimado con un destinatario de prueba propio
    y pulsa **Email PDF**. Confirma la entrega en Resend → Emails y en la bandeja.
 
-El formulario `/quote/` usa la misma clave y además necesita estas variables
-de ejecución (no son necesarias para el botón Email PDF):
-
-- `QUOTE_FROM`: `Dura Fence Metal <invoice@durafencemetal.com>`
-- `QUOTE_TO`: la bandeja del negocio que debe recibir solicitudes.
+El formulario `/quote/` usa la misma clave de Resend. Envía desde
+`Dura Fence Metal <info@durafencemetal.com>` directamente a
+`allneedsdiscount1@gmail.com` y `terrerov@gmail.com`. La dirección pública del sitio es
+`info@durafencemetal.com`; las variables antiguas `QUOTE_FROM` y `QUOTE_TO`
+ya no controlan este destino.
 
 Resend se utiliza para el envío; no requiere Cloudflare Email Sending ni su binding.
 Las respuestas a `invoice@durafencemetal.com` requieren un buzón o una regla de
 Email Routing separada. El Worker conserva su manejador de reenvío a las dos
 bandejas del negocio, que solo funciona con la regla y destinos verificados.
 
+Para recibir correos enviados directamente a `info@durafencemetal.com` o
+respuestas al remitente del formulario, activa Cloudflare Email Routing para el
+dominio. Verifica `allneedsdiscount1@gmail.com` y `terrerov@gmail.com` como
+direcciones de destino y crea
+una regla para `info@durafencemetal.com` con acción **Send to a Worker**,
+seleccionando `durafence`. El manejador del Worker reenvía esos mensajes a ambas bandejas.
+Confirma además que los registros MX de Email Routing sigan activos.
+
 Si una clave fue compartida en un chat, revócala y reemplaza el secreto en Cloudflare.
 Las pruebas locales simulan Resend y no envían mensajes reales.
 
 Documentación: [enviar correos](https://resend.com/docs/api-reference/emails/send-email),
 [verificar dominios](https://resend.com/docs/dashboard/domains/introduction).
+Para el correo entrante: [reglas y destinos de Cloudflare Email Routing](https://developers.cloudflare.com/email-service/configuration/email-routing-addresses/).
 
 ### Dominio
 

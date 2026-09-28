@@ -1,4 +1,7 @@
-/** Public facts for Dura Fence Metal. Leave phone and email empty until they are real. */
+/** Public facts for Dura Fence Metal. */
+
+export const contactAddress = 'info@durafencemetal.com';
+export const contactInboxes = ['allneedsdiscount1@gmail.com', 'terrerov@gmail.com'] as const;
 
 export const siteUrl = 'https://durafencemetal.com';
 
@@ -21,7 +24,7 @@ export const site = {
   description:
     'Metal privacy fences, pedestrian and driveway gates, planks, and fence parts in South Georgia. Compare finishes and build your Dura Fence Metal estimate.',
   phone: '678 622 1776',
-  email: '',
+  email: contactAddress,
   // Working trip list. Remove a town if the crew does not go there.
   cities: [
     'Valdosta',

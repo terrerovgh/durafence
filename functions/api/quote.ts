@@ -1,12 +1,12 @@
 // Cloudflare Pages Function — POST /api/quote
-// Sends the quote text with Resend when RESEND_API_KEY, QUOTE_TO, and QUOTE_FROM are set.
-// QUOTE_FROM must be a sender on a domain Resend has verified.
+// Sends quote requests through Resend to the shop inbox.
+// The public info address must belong to a domain verified in Resend.
+
+import { contactAddress, contactInboxes, site } from '../../src/data/site.ts';
 
 interface Env {
   RESEND_API_KEY?: string;
   RESENT_API_KEY?: string;
-  QUOTE_TO?: string;
-  QUOTE_FROM?: string;
 }
 
 const propertyLabels: Record<string, string> = {
@@ -140,8 +140,8 @@ async function sendMail(env: Env, input: Record<string, string>, text: string): 
       'content-type': 'application/json',
     },
     body: JSON.stringify({
-      from: env.QUOTE_FROM,
-      to: [env.QUOTE_TO],
+      from: `${site.name} <${contactAddress}>`,
+      to: [...contactInboxes],
       ...(email ? { reply_to: email } : {}),
       subject: `Quote request — ${(input.name ?? '').trim()}`,
       text,
@@ -174,7 +174,7 @@ export const onRequestPost = async (context: { request: Request; env: Env }) => 
   if (Object.keys(fields).length > 0) return fail(400, 'Check the form.', 'invalid', fields);
 
   const text = compose(payload);
-  if (!(env.RESEND_API_KEY?.trim() || env.RESENT_API_KEY?.trim()) || !env.QUOTE_TO || !env.QUOTE_FROM) {
+  if (!(env.RESEND_API_KEY?.trim() || env.RESENT_API_KEY?.trim())) {
     return fail(503, 'The request was not sent.', 'not_configured', undefined, `<pre>${escapeHtml(text)}</pre>`);
   }
 

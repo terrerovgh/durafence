@@ -5,6 +5,7 @@ import { PDFDocument } from 'pdf-lib';
 import { estimateCopies, onRequestPost } from '../../functions/api/estimate-email.ts';
 import { draftEstimateEmail, prepareEstimateLetter, type EstimateLetter } from './estimate-mail.ts';
 import { buildEstimatePdf } from './estimate-pdf.ts';
+import worker from '../../worker/index.ts';
 
 const sentOn = 'September 25, 2026';
 
@@ -190,7 +191,8 @@ for (const key of ['RESEND_API_KEY', 'RESENT_API_KEY']) {
     const fetch = t.mock.method(globalThis, 'fetch', async (_url, options) => {
       assert.equal(options.headers.authorization, 'Bearer test-key');
       const message = JSON.parse(options.body);
-      assert.deepEqual(message.to, ['shop@example.com']);
+      assert.deepEqual(message.to, ['allneedsdiscount1@gmail.com', 'terrerov@gmail.com']);
+      assert.equal(message.from, 'Dura Fence Metal <info@durafencemetal.com>');
       assert.equal(message.reply_to, 'customer@example.com');
       return Response.json({ id: 'quote-message' });
     });
@@ -199,9 +201,37 @@ for (const key of ['RESEND_API_KEY', 'RESENT_API_KEY']) {
         method: 'POST', headers: { 'content-type': 'application/json', accept: 'application/json' },
         body: JSON.stringify({ name: 'Customer', email: 'customer@example.com', city: 'Valdosta', property: 'residential', work: 'new' }),
       }),
-      env: { [key]: 'test-key', QUOTE_FROM: 'invoice@durafencemetal.com', QUOTE_TO: 'shop@example.com' },
+      env: { [key]: 'test-key' },
     });
     assert.equal(response.status, 200);
     assert.equal(fetch.mock.callCount(), 1);
   });
 }
+
+it('forwards incoming mail for the public info address to both recipients', async () => {
+  const forwarded: string[] = [];
+  const rejected: string[] = [];
+  await worker.email({
+    to: 'INFO@durafencemetal.com',
+    async forward(address: string) { forwarded.push(address); },
+    setReject(reason: string) { rejected.push(reason); },
+  });
+  assert.deepEqual(forwarded, ['allneedsdiscount1@gmail.com', 'terrerov@gmail.com']);
+  assert.deepEqual(rejected, []);
+});
+
+it('still forwards contact mail to the second recipient if the first fails', async (t) => {
+  t.mock.method(console, 'error', () => {});
+  const forwarded: string[] = [];
+  const rejected: string[] = [];
+  await worker.email({
+    to: 'info@durafencemetal.com',
+    async forward(address: string) {
+      if (address === 'allneedsdiscount1@gmail.com') throw new Error('unavailable');
+      forwarded.push(address);
+    },
+    setReject(reason: string) { rejected.push(reason); },
+  });
+  assert.deepEqual(forwarded, ['terrerov@gmail.com']);
+  assert.deepEqual(rejected, []);
+});
