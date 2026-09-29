@@ -362,6 +362,122 @@ function readCustomer(root: HTMLElement): EstimateCustomer {
   };
 }
 
+function mountAddressAutocomplete(root: HTMLElement): void {
+  const input = root.querySelector<HTMLInputElement>('#invoice-address');
+  const list = root.querySelector<HTMLElement>('#invoice-address-list');
+  const help = root.querySelector<HTMLElement>('[data-address-help]');
+  if (!input || !list || !help) return;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  let controller: AbortController | undefined;
+  let validationController: AbortController | undefined;
+  let version = 0;
+  let validationVersion = 0;
+
+  const close = () => {
+    list.hidden = true;
+    list.replaceChildren();
+    input.setAttribute('aria-expanded', 'false');
+    input.removeAttribute('aria-activedescendant');
+  };
+
+  const validateCurrent = async () => {
+    const address = input.value.trim();
+    if (!address) return;
+    validationController?.abort();
+    validationController = new AbortController();
+    const current = ++validationVersion;
+    help.textContent = 'Checking the address…';
+    try {
+      const response = await fetch(`/api/estimate-address?address=${encodeURIComponent(address)}`, { signal: validationController.signal });
+      if (!response.ok) throw new Error('Verification unavailable');
+      const body = await response.json() as { valid?: boolean };
+      if (current !== validationVersion) return;
+      if (body.valid) {
+        setFieldError(root, 'customer-address', undefined);
+        help.textContent = 'Address matched a US Census address range.';
+      } else {
+        setFieldError(root, 'customer-address', 'This address could not be matched. Check the street, city, and state.');
+        help.textContent = 'Check the street number, city, and state.';
+      }
+    } catch (error) {
+      if (current !== validationVersion || (error instanceof DOMException && error.name === 'AbortError')) return;
+      help.textContent = 'Address verification is unavailable right now. You can try again when you email the estimate.';
+    }
+  };
+
+  input.addEventListener('input', () => {
+    clearTimeout(timer);
+    controller?.abort();
+    validationController?.abort();
+    ++validationVersion;
+    const current = ++version;
+    close();
+    setFieldError(root, 'customer-address', undefined);
+    const query = input.value.trim();
+    if (query.length < 4) {
+      help.textContent = 'Start typing a US street address, then choose a suggestion or enter the full address.';
+      return;
+    }
+    help.textContent = 'Searching US addresses…';
+    timer = setTimeout(async () => {
+      controller = new AbortController();
+      try {
+        const response = await fetch(`/api/estimate-address?q=${encodeURIComponent(query)}`, { signal: controller.signal });
+        if (!response.ok) throw new Error('Suggestions unavailable');
+        const body = await response.json() as { suggestions?: string[] };
+        if (current !== version) return;
+        const suggestions = Array.isArray(body.suggestions) ? body.suggestions : [];
+        for (const suggestion of suggestions) {
+          if (typeof suggestion !== 'string') continue;
+          const option = document.createElement('button');
+          option.type = 'button';
+          option.role = 'option';
+          option.textContent = suggestion;
+          option.addEventListener('click', () => {
+            input.value = suggestion;
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+            clearTimeout(timer);
+            controller?.abort();
+            ++version;
+            close();
+            input.focus();
+            void validateCurrent();
+          });
+          list.append(option);
+        }
+        list.hidden = list.childElementCount === 0;
+        input.setAttribute('aria-expanded', String(!list.hidden));
+        help.textContent = suggestions.length ? `${suggestions.length} address suggestions. Use the arrow keys to choose one.` : 'No suggestions found. Enter the complete street address, city, and state.';
+      } catch (error) {
+        if (current !== version || (error instanceof DOMException && error.name === 'AbortError')) return;
+        help.textContent = 'Suggestions are unavailable. Enter the complete street address, city, and state.';
+      }
+    }, 350);
+  });
+
+  input.addEventListener('blur', () => { void validateCurrent(); });
+
+  input.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') { clearTimeout(timer); controller?.abort(); ++version; close(); return; }
+    if (event.key !== 'ArrowDown' || list.hidden) return;
+    event.preventDefault();
+    list.querySelector<HTMLButtonElement>('button')?.focus();
+  });
+  list.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') { clearTimeout(timer); controller?.abort(); ++version; close(); input.focus(); return; }
+    if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
+    event.preventDefault();
+    const options = [...list.querySelectorAll<HTMLButtonElement>('button')];
+    const index = options.indexOf(document.activeElement as HTMLButtonElement);
+    const next = event.key === 'ArrowDown' ? index + 1 : index - 1;
+    if (next < 0) input.focus();
+    else options[Math.min(next, options.length - 1)]?.focus();
+  });
+  root.addEventListener('click', (event) => {
+    if (event.target instanceof Node && !input.contains(event.target) && !list.contains(event.target)) close();
+  });
+}
+
 function setEmailStatus(root: HTMLElement, message: string, tone: '' | 'ok' | 'bad'): void {
   const status = root.querySelector<HTMLElement>('[data-email-status]');
   if (!status) return;
@@ -566,6 +682,7 @@ export function mountEstimate(): void {
   };
 
   form.addEventListener('submit', (event) => event.preventDefault());
+  mountAddressAutocomplete(root);
   form.addEventListener('input', update);
   form.addEventListener('change', update);
   root.querySelector('[data-pay-card]')?.addEventListener('change', update);

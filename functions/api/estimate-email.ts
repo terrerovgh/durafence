@@ -9,6 +9,7 @@ import {
   invoiceAddress,
   prepareEstimateLetter,
 } from '../../src/data/estimate-mail.ts';
+import { validateUsAddress } from '../../src/data/us-address.ts';
 
 export const estimateCopies = ['abelterreros@yahoo.com', 'allneedsdiscount1@gmail.com'] as const;
 
@@ -60,7 +61,7 @@ async function overLimit(request: Request): Promise<boolean> {
   }
 }
 
-export async function onRequestPost(context: { request: Request; env: EstimateEmailEnv }): Promise<Response> {
+export async function onRequestPost(context: { request: Request; env: EstimateEmailEnv; validateAddress?: typeof validateUsAddress }): Promise<Response> {
   const { request, env } = context;
   const raw = await request.text();
   if (raw.length > 20_000) return fail(413, 'too_large', 'That request is too long.');
@@ -82,6 +83,15 @@ export async function onRequestPost(context: { request: Request; env: EstimateEm
   }
 
   const { letter } = prepared;
+  const address = await (context.validateAddress ?? validateUsAddress)(letter.customer.address);
+  if (address.kind === 'invalid') {
+    return fail(400, 'invalid_address', 'Check the project address.', {
+      'customer-address': 'Enter a complete US street address with city and state that can be matched.',
+    });
+  }
+  if (address.kind === 'unavailable') {
+    return fail(503, 'address_unavailable', 'Address verification is temporarily unavailable. Please try again.');
+  }
   const draft = draftEstimateEmail(letter);
   let pdf: Uint8Array;
   try {

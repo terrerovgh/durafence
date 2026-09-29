@@ -10,7 +10,7 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "test": "node --experimental-strip-types --test src/data/estimate.test.ts src/data/estimate-mail.test.ts"
+    "test": "node --experimental-strip-types --test src/data/estimate.test.ts src/data/estimate-mail.test.ts src/data/us-address.test.ts"
   },
   "devDependencies": {
     "@astrojs/sitemap": "^3.7.4",

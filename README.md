@@ -23,6 +23,7 @@ El botón **Email PDF** en `/estimate/` envía el PDF con Resend desde
 `Dura Fence Metal <invoice@durafencemetal.com>`. El destinatario es el cliente;
 las copias ocultas van a `abelterreros@yahoo.com` y `allneedsdiscount1@gmail.com`.
 El Worker recalcula los precios y genera el PDF antes de enviarlo.
+El campo **Project address** consulta [Photon](https://github.com/komoot/photon) para sugerir direcciones de EE. UU. y el [Censo de EE. UU.](https://www.census.gov/programs-surveys/geography/technical-documentation/complete-technical-documentation/census-geocoder.html) para comprobar la dirección al salir del campo y antes del envío. No requiere una clave adicional. La coincidencia del Censo se basa en rangos de direcciones y no confirma la existencia física de una vivienda ni su entregabilidad postal. El servidor público de Photon puede limitar las consultas; si eso ocurre, el cliente puede escribir la dirección completa manualmente.
 **Print / Save PDF** conserva la hoja original de impresión del navegador, con
 el monograma y el dibujo técnico. El PDF adjunto por correo reproduce ese diseño
 en una página, con el dibujo y los detalles del pedido en dos columnas.

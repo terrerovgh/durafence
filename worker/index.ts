@@ -1,4 +1,5 @@
 import { estimateCopies, onRequestPost as onEstimateEmail } from '../functions/api/estimate-email.ts';
+import { onRequestGet as onEstimateAddress } from '../functions/api/estimate-address.ts';
 import { onRequestPost } from '../functions/api/quote.ts';
 import { invoiceAddress } from '../src/data/estimate-mail.ts';
 import { contactAddress, contactInboxes } from '../src/data/site.ts';
@@ -89,6 +90,10 @@ export default {
 
     if (url.pathname === '/api/estimate-email' && method === 'POST') {
       return onEstimateEmail({ request, env });
+    }
+
+    if (url.pathname === '/api/estimate-address' && method === 'GET') {
+      return onEstimateAddress({ request });
     }
 
 

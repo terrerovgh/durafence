@@ -57,7 +57,9 @@ const aluminumNote = `${formatMoney(aluminumRate.installed * 100)} a foot instal
               </div>
               <div class="sm:col-span-2">
                 <label class="kicker" for="invoice-address">Project address</label>
-                <input class="field-input mt-2" id="invoice-address" name="customer-address" data-customer-field="address" autocomplete="street-address" maxlength="200" />
+                <input class="field-input mt-2" id="invoice-address" name="customer-address" data-customer-field="address" data-note="invoice-address-help" autocomplete="off" maxlength="200" role="combobox" aria-autocomplete="list" aria-controls="invoice-address-list" aria-expanded="false" aria-describedby="invoice-address-help" />
+                <div class="address-options" id="invoice-address-list" role="listbox" aria-label="Project address suggestions" hidden></div>
+                <p class="mt-2 text-sm text-muted" id="invoice-address-help" data-address-help aria-live="polite">Start typing a US street address, then choose a suggestion or enter the full address.</p>
                 <p class="mt-2 text-sm text-white" id="invoice-address-error" data-error-for="customer-address" hidden></p>
               </div>
             </div>
@@ -282,6 +284,24 @@ const aluminumNote = `${formatMoney(aluminumRate.installed * 100)} a foot instal
 </div>
 
 <style>
+  .address-options {
+    border: 1px solid var(--color-line);
+    max-height: 14rem;
+    overflow-y: auto;
+  }
+  .address-options :global(button) {
+    display: block;
+    width: 100%;
+    padding: 0.7rem 0.8rem;
+    color: var(--color-steel);
+    text-align: left;
+    font: inherit;
+  }
+  .address-options :global(button:hover),
+  .address-options :global(button:focus-visible) {
+    background: var(--color-line);
+    outline: none;
+  }
   .choice:has(input:checked) {
     border-color: var(--color-gold);
   }

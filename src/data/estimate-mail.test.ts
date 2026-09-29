@@ -120,6 +120,7 @@ describe('buildEstimatePdf', () => {
 });
 
 describe('POST /api/estimate-email with Resend', () => {
+  const validateAddress = async () => ({ kind: 'valid' as const, matchedAddress: '14 OAK ST, VALDOSTA, GA' });
   function request(body = requestBody()) {
     return new Request('https://durafencemetal.com/api/estimate-email', {
       method: 'POST', body: JSON.stringify(body),
@@ -135,7 +136,7 @@ describe('POST /api/estimate-email with Resend', () => {
         sent.push(JSON.parse(options.body));
         return Response.json({ id: 'test-message' });
       });
-      const response = await onRequestPost({ request: request(), env: { [key]: 'test-key' } });
+      const response = await onRequestPost({ request: request(), env: { [key]: 'test-key' }, validateAddress });
       assert.equal(response.status, 200);
       assert.equal(sent.length, 1);
       const message = sent[0];
@@ -159,13 +160,13 @@ describe('POST /api/estimate-email with Resend', () => {
     });
     const body = requestBody();
     body.customer.email = 'AbelTerreros@yahoo.com';
-    assert.equal((await onRequestPost({ request: request(body), env: { RESEND_API_KEY: 'test' } })).status, 200);
+    assert.equal((await onRequestPost({ request: request(body), env: { RESEND_API_KEY: 'test' }, validateAddress })).status, 200);
   });
 
   for (const [providerStatus, expected] of [[401, 503], [403, 503], [429, 429], [500, 502]]) {
     it(`handles Resend HTTP ${providerStatus}`, async (t) => {
       t.mock.method(globalThis, 'fetch', async () => Response.json({ message: 'private provider detail' }, { status: providerStatus }));
-      const response = await onRequestPost({ request: request(), env: { RESEND_API_KEY: 'test' } });
+      const response = await onRequestPost({ request: request(), env: { RESEND_API_KEY: 'test' }, validateAddress });
       assert.equal(response.status, expected);
       assert.doesNotMatch(await response.text(), /private provider detail/);
     });
@@ -173,15 +174,23 @@ describe('POST /api/estimate-email with Resend', () => {
 
   it('handles network failures without reporting success', async (t) => {
     t.mock.method(globalThis, 'fetch', async () => { throw new Error('network'); });
-    assert.equal((await onRequestPost({ request: request(), env: { RESEND_API_KEY: 'test' } })).status, 502);
+    assert.equal((await onRequestPost({ request: request(), env: { RESEND_API_KEY: 'test' }, validateAddress })).status, 502);
   });
 
   it('does not send without a key or valid customer', async (t) => {
     const fetch = t.mock.method(globalThis, 'fetch', async () => { throw new Error('unexpected send'); });
-    assert.equal((await onRequestPost({ request: request(), env: {} })).status, 503);
+    assert.equal((await onRequestPost({ request: request(), env: {}, validateAddress })).status, 503);
     const body = requestBody();
     body.customer.email = '';
-    assert.equal((await onRequestPost({ request: request(body), env: { RESEND_API_KEY: 'test' } })).status, 400);
+    assert.equal((await onRequestPost({ request: request(body), env: { RESEND_API_KEY: 'test' }, validateAddress })).status, 400);
+    assert.equal(fetch.mock.callCount(), 0);
+  });
+
+  it('does not send when the project address cannot be matched', async (t) => {
+    const fetch = t.mock.method(globalThis, 'fetch', async () => { throw new Error('unexpected send'); });
+    const response = await onRequestPost({ request: request(), env: { RESEND_API_KEY: 'test' }, validateAddress: async () => ({ kind: 'invalid' }) });
+    assert.equal(response.status, 400);
+    assert.equal((await response.json()).fields['customer-address'] !== undefined, true);
     assert.equal(fetch.mock.callCount(), 0);
   });
 });
