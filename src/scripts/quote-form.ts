@@ -182,6 +182,7 @@ export function mountQuoteForm(): void {
       if (response.ok) {
         const body = (await response.json().catch(() => null)) as { ok?: boolean } | null;
         if (body?.ok) {
+          document.dispatchEvent(new Event('dura-fence:lead'));
           if (status) status.textContent = 'Request sent. A measurement comes before a price.';
           form.querySelectorAll<HTMLElement>('input, select, textarea, button').forEach((field) => {
             if (field !== copyButton) field.setAttribute('disabled', '');

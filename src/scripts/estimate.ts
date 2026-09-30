@@ -559,6 +559,7 @@ async function emailEstimate(root: HTMLElement, result: Estimate): Promise<void>
       setEmailStatus(root, body.message || 'The estimate was not sent. Try again in a minute.', 'bad');
       return;
     }
+    document.dispatchEvent(new Event('dura-fence:lead'));
     setEmailStatus(root, body.message || `Sent to ${customer.email}. A copy went to the shop.`, 'ok');
   } catch {
     setEmailStatus(root, 'The estimate was not sent. Try again in a minute.', 'bad');

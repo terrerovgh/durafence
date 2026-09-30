@@ -6,6 +6,8 @@ import '@fontsource/barlow/latin-500.css';
 import '@fontsource/barlow/latin-600.css';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import GoogleTag from '../components/GoogleTag.astro';
+import MetaPixel from '../components/MetaPixel.astro';
 import { schemaPhone, site, siteUrl } from '../data/site';
 import { trades } from '../data/services';
 
@@ -93,6 +95,8 @@ const jsonLd = JSON.stringify(graph).replace(/</g, '\\u003c');
 <!doctype html>
 <html lang="en-US">
   <head>
+    <GoogleTag />
+    <MetaPixel placement="head" />
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#090909" />
@@ -128,5 +132,6 @@ const jsonLd = JSON.stringify(graph).replace(/</g, '\\u003c');
       <slot />
     </main>
     <Footer />
+    <MetaPixel />
   </body>
 </html>

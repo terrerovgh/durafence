@@ -1,0 +1,20 @@
+---
+const measurementId = (import.meta.env.PUBLIC_GA_MEASUREMENT_ID ?? 'G-1Y94FEZF3D').trim();
+if (measurementId && !/^G-[A-Z0-9]+$/.test(measurementId)) {
+  throw new Error('PUBLIC_GA_MEASUREMENT_ID must be a GA4 measurement ID like G-XXXXXXXX.');
+}
+// Classic script, not an Astro module. gtag.js calls the global gtag function.
+const config = `window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+
+gtag('config', '${measurementId}');`;
+---
+
+{measurementId && (
+  <>
+    <!-- Google tag (gtag.js) -->
+    <script async is:inline src={`https://www.googletagmanager.com/gtag/js?id=${measurementId}`}></script>
+    <script is:inline set:html={config}></script>
+  </>
+)}

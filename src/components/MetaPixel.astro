@@ -1,0 +1,38 @@
+---
+interface Props {
+  placement?: 'head' | 'body';
+}
+const { placement = 'body' } = Astro.props;
+const pixelId = (import.meta.env.PUBLIC_META_PIXEL_ID ?? '1991001054903517').trim();
+if (pixelId && !/^\d{5,20}$/.test(pixelId)) {
+  throw new Error('PUBLIC_META_PIXEL_ID must be the numeric Meta pixel ID.');
+}
+---
+
+{pixelId && placement === 'head' && (
+  <>
+    <!-- Meta Pixel Code -->
+    <script is:inline define:vars={{ pixelId }}>
+      !function(f,b,e,v,n,t,s)
+      {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+      n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+      if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+      n.queue=[];t=b.createElement(e);t.async=!0;
+      t.src=v;s=b.getElementsByTagName(e)[0];
+      s.parentNode.insertBefore(t,s)}(window, document,'script',
+      'https://connect.facebook.net/en_US/fbevents.js');
+      fbq('init', pixelId);
+      fbq('track', 'PageView');
+      document.addEventListener('dura-fence:lead', function() {
+        fbq('trackSingle', pixelId, 'Lead');
+      });
+    </script>
+    <!-- End Meta Pixel Code -->
+  </>
+)}
+
+{pixelId && placement === 'body' && (
+  <noscript><img height="1" width="1" style="display:none" alt=""
+    src={`https://www.facebook.com/tr?id=${pixelId}&ev=PageView&noscript=1`}
+  /></noscript>
+)}

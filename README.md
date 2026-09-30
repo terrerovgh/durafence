@@ -4,6 +4,36 @@ Sitio de Astro para [durafencemetal.com](https://durafencemetal.com).
 
 ## Cloudflare
 
+### Píxel de Meta
+
+El píxel de Dura Fence Metal es `1991001054903517` y está configurado por defecto.
+El script está justo después de `<head>` en la plantilla común a todas las páginas.
+La variable de compilación `PUBLIC_META_PIXEL_ID` permite sustituir ese ID;
+un valor vacío desactiva el píxel.
+El ID de la página de Facebook (`61594968148256`) es un activo diferente.
+
+1. En el [Administrador de eventos de Meta](https://business.facebook.com/events_manager2/),
+   selecciona el píxel del negocio Dura Fence Metal o crea una fuente de datos web.
+   Copia el ID del píxel/conjunto de datos.
+2. Para usar otro píxel, añade `PUBLIC_META_PIXEL_ID=ID_REAL` a `.env` (ignorado por Git).
+   En Cloudflare configura ese mismo valor en las variables del **build** si deseas
+   sustituir el ID predeterminado.
+   El ID es público; no necesita un token de acceso ni una contraseña.
+3. Vuelve a compilar y publicar. Para una compilación local:
+   `PUBLIC_META_PIXEL_ID=ID_REAL npm run build`.
+4. En Meta, vincula el conjunto de datos a la cuenta publicitaria usada por Dura
+   Fence Metal. La página de Facebook y el píxel se administran como activos
+   del negocio; el enlace de la página por sí solo no permite hacer esa conexión.
+5. En **Probar eventos**, abre la web publicada.
+   Comprueba `PageView` al visitar páginas y `Lead` después de enviar correctamente
+   una solicitud o el correo de un estimado.
+
+Se usa el código base proporcionado por Meta. La imagen de respaldo `noscript`
+está en el cuerpo del documento. Los envíos fallidos, los enlaces `mailto` y la
+impresión de un PDF no generan `Lead`. Los eventos añadidos por el sitio no
+incluyen los campos de los formularios. La recopilación automática adicional
+depende de los ajustes del píxel en Meta.
+
 Los dominios `durafencemetal.com` y `www.durafencemetal.com` están en el Worker `durafence`. `wrangler.jsonc` publica el sitio estático de `dist/` en ese Worker. `www` redirige al dominio principal.
 
 Node queda fijado en `.node-version` (`22.16.0`). Astro 7 no construye con Node 18.
