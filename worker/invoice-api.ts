@@ -1,4 +1,5 @@
 import { normalizeOrder, calculate, issuanceIssues, type Payment, type StoredInvoice } from '../src/invoice/model.ts';
+import { PdfLayoutOverflowError, PDF_OVERFLOW_ES } from '../src/pdf/layout-error.ts';
 import { buildInvoicePdf } from '../src/invoice/pdf.ts';
 import { bytesToBase64 } from '../src/data/estimate-pdf.ts';
 import { invoiceAddress } from '../src/data/estimate-mail.ts';
@@ -76,6 +77,17 @@ async function sendInvoice(invoice: StoredInvoice, store: InvoiceStore, env: Inv
   if (issues.length) return fail(400, issues.join(' '));
   const apiKey = env.RESEND_API_KEY?.trim() || env.RESENT_API_KEY?.trim();
   if (!apiKey) return fail(503, 'El envio de correo no esta configurado.');
+  // Preserve prior send outcomes, including old revisions, without reserving a new slot.
+  const priorSend = await store.db.prepare('SELECT state FROM invoice_sends WHERE document_id = ? AND version = ?')
+    .bind(invoice.id, invoice.version).first<{ state: string }>();
+  if (priorSend?.state === 'sent') return json({ ok: true, message: 'Esta revision ya fue enviada.' });
+  if (priorSend) return fail(409, 'El envio esta en curso o requiere comprobar su resultado. No se repetira automaticamente.');
+  let bytes: Uint8Array;
+  try { bytes = await buildInvoicePdf(invoice); }
+  catch (error) {
+    if (error instanceof PdfLayoutOverflowError) return json({ ok: false, error: 'pdf_layout_overflow', message: PDF_OVERFLOW_ES }, 422);
+    return fail(500, 'No se pudo generar el PDF. El correo no se envio.');
+  }
   const since = new Date(Date.now() - 3600000).toISOString();
   const key = 'durafence-invoice/' + invoice.id + '/' + invoice.version;
   const now = new Date().toISOString();
@@ -87,13 +99,6 @@ async function sendInvoice(invoice: StoredInvoice, store: InvoiceStore, env: Inv
     if (!prior) return fail(429, 'Limite de 30 envios por hora. Espera antes de enviar otro documento.');
     if (prior.state === 'sent') return json({ ok: true, message: 'Esta revision ya fue enviada.' });
     return fail(409, 'El envio esta en curso o requiere comprobar su resultado. No se repetira automaticamente.');
-  }
-  let bytes: Uint8Array;
-  try { bytes = await buildInvoicePdf(invoice); }
-  catch {
-    await store.db.prepare('UPDATE invoice_sends SET state = ?, updated_at = ? WHERE document_id = ? AND version = ?')
-      .bind('failed', now, invoice.id, invoice.version).run();
-    return fail(500, 'No se pudo generar el PDF. El correo no se envio.');
   }
   const totals = calculate(invoice.order, invoice.payments);
   const title = invoice.kind === 'invoice' ? 'Invoice' : 'Estimate';
@@ -227,6 +232,7 @@ export async function handleInvoiceArea(request: Request, env: InvoiceEnv): Prom
     if (request.method === 'POST' && action === 'send') return sendInvoice(previous, store, env);
     return fail(405, 'Metodo o accion no admitido.');
   } catch (error) {
+    if (error instanceof PdfLayoutOverflowError) return json({ ok: false, error: 'pdf_layout_overflow', message: PDF_OVERFLOW_ES }, 422);
     if (error instanceof Conflict) return fail(409, error.message);
     if (error instanceof SyntaxError) return fail(400, 'JSON no valido.');
     const message = error instanceof Error ? error.message : '';

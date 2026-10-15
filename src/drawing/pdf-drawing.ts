@@ -1,5 +1,5 @@
-import { rgb, type PDFDocument, type PDFPage, type PDFFont } from 'pdf-lib';
-import { fenceScene, type BayDrawing, type FenceScene } from './fence-scene.ts';
+import { rgb, type PDFPage, type PDFFont } from 'pdf-lib';
+import type { FenceScene } from './fence-scene.ts';
 
 const safeText = (value: string) => value.replace(/[^\u0020-\u007E\u00A0-\u00FF]/g, '?');
 const color = (hex: string) => rgb(...[1, 3, 5].map((at) => parseInt(hex.slice(at, at + 2), 16) / 255) as [number, number, number]);
@@ -24,30 +24,6 @@ export function renderFenceScene(page: PDFPage, regular: PDFFont, bold: PDFFont,
       const path = item.points.map((point, i) => (i ? 'L ' : 'M ') + point.x + ' ' + point.y).join(' ') + ' Z';
       page.drawSvgPath(path, { x: left, y: top, color: color(item.fill), borderColor: color(item.stroke), borderWidth: 0.6 });
     }
-  }
-}
-
-/** Append only; financial pages, customer information and their ordering are retained. */
-export function appendTechnicalDrawing(doc: PDFDocument, regular: PDFFont, bold: PDFFont, spec: BayDrawing, schedule: string[]): void {
-  let page = doc.addPage([612, 792]);
-  const scene = fenceScene(spec);
-  renderFenceScene(page, regular, bold, scene);
-  let y = 752 - scene.height - 22;
-  const heading = () => {
-    page.drawText('DIMENSION SCHEDULE / ORDER REFERENCE', { x: 40, y, size: 10, font: bold, color: color('#222222') });
-    y -= 22;
-  };
-  heading();
-  for (const row of schedule) {
-    for (const part of drawingLines(row, regular, 9, 532)) {
-      if (y < 86) {
-        page = doc.addPage([612, 792]); y = 736;
-        heading();
-      }
-      page.drawText(part, { x: 40, y, size: 9, font: regular, color: color('#222222') });
-      y -= 13;
-    }
-    y -= 6;
   }
 }
 

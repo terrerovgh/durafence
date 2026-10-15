@@ -1,3 +1,4 @@
+import { PdfLayoutOverflowError } from '../pdf/layout-error.ts';
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { onRequestPost as onQuote } from '../../functions/api/quote.ts';
@@ -98,10 +99,10 @@ describe('buildEstimatePdf', () => {
     const bytes = await buildEstimatePdf(letter());
     assert.equal(Buffer.from(bytes.subarray(0, 5)).toString(), '%PDF-');
     const doc = await PDFDocument.load(bytes);
-    assert.ok(doc.getPageCount() >= 1);
+    assert.equal(doc.getPageCount(), 1);
   });
 
-  it('keeps going when the address is long and several gates are on the sheet', async () => {
+  it('rejects an oversized gate schedule instead of adding pages or dropping information', async () => {
     const body = requestBody();
     const estimate = {
       ...(body.estimate as object),
@@ -113,9 +114,7 @@ describe('buildEstimatePdf', () => {
     const prepared = prepareEstimateLetter({ ...body, customer, estimate }, sentOn);
     assert.equal(prepared.ok, true);
     if (!prepared.ok || prepared.kind !== 'letter') return;
-    const bytes = await buildEstimatePdf(prepared.letter);
-    const doc = await PDFDocument.load(bytes);
-    assert.ok(doc.getPageCount() >= 1);
+    await assert.rejects(() => buildEstimatePdf(prepared.letter), PdfLayoutOverflowError);
   });
 });
 
@@ -243,4 +242,32 @@ it('still forwards contact mail to the second recipient if the first fails', asy
   });
   assert.deepEqual(forwarded, ['terrerov@gmail.com']);
   assert.deepEqual(rejected, []);
+});
+
+it('public layout overflow returns 422 without address lookup, send provider or rate-limit consumption', async (t) => {
+  const descriptor = Object.getOwnPropertyDescriptor(globalThis,'caches');
+  let writes = 0, lookups = 0;
+  Object.defineProperty(globalThis,'caches',{configurable:true,value:{default:{
+    match:async () => undefined,
+    put:async () => { writes += 1; },
+  }}});
+  const external = t.mock.method(globalThis,'fetch',async () => { throw new Error('Unexpected external request'); });
+  const logged = t.mock.method(console,'error',() => {});
+  try {
+    const body = requestBody({estimate:{...requestBody().estimate,
+      aluminumGates:Array.from({length:12},() => ({widthFt:14,labor:'materials'})),
+    }});
+    const response = await onRequestPost({
+      request:new Request('https://example.test/api/estimate-email',{method:'POST',body:JSON.stringify(body)}),
+      env:{RESEND_API_KEY:'synthetic-key'},
+      validateAddress:async () => { lookups += 1; return {kind:'valid',matchedAddress:'Synthetic'}; },
+    });
+    assert.equal(response.status,422);
+    const error = await response.json();
+    assert.equal(error.error,'pdf_layout_overflow'); assert.match(error.message,/one Letter page/);
+    assert.equal(external.mock.callCount(),0); assert.equal(writes,0); assert.equal(lookups,0); assert.equal(logged.mock.callCount(),0);
+  } finally {
+    if (descriptor) Object.defineProperty(globalThis,'caches',descriptor);
+    else Reflect.deleteProperty(globalThis,'caches');
+  }
 });

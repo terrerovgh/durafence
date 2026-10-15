@@ -40,6 +40,23 @@ export function syncFootageInputs(order: Order, primary: FootageInput | null,
   });
 }
 
+/** Validate the actual saved-revision response before making a file or navigating a popup. */
+export async function fetchInvoicePdf(url: string): Promise<Blob> {
+  const response = await fetch(url, { credentials: 'same-origin', cache: 'no-store' });
+  if (!response.ok) {
+    let message = 'No se pudo generar el PDF. El documento sigue guardado.';
+    try {
+      const body = await response.json() as { message?: unknown };
+      if (typeof body.message === 'string') message = body.message;
+    } catch {}
+    throw new Error(message);
+  }
+  if (!response.headers.get('content-type')?.startsWith('application/pdf')) {
+    throw new Error('No se recibio un PDF. Comprueba tu sesion y vuelve a intentar.');
+  }
+  return response.blob();
+}
+
 export function mountDashboard(): void {
   const root = document.querySelector<HTMLElement>('#invoice-dashboard');
   if (!root) return;
@@ -327,10 +344,15 @@ export function mountDashboard(): void {
           const result=await api('/'+current.id+'/send','POST',{version:current.version}); status(result.message!); await revisions();
         } else if (action === 'download' || action === 'print') {
           const url='/api/invoices/'+current.id+'/pdf?version='+current.version+(action==='download'?'&download=1':'');
-          if (action === 'print') {
-            if (!popup) throw new Error('Permite abrir la ventana del PDF para imprimir.');
-            popup.opener=null; popup.location.href=url; status('Imprime desde el visor del PDF a tamano real.');
-          } else { const link=document.createElement('a'); link.href=url; link.download=current.number+'.pdf'; link.click(); }
+          if (action === 'print' && !popup) throw new Error('Permite abrir la ventana del PDF para imprimir.');
+          const blob = await fetchInvoicePdf(url);
+          const blobUrl = URL.createObjectURL(blob);
+          if (action === 'print' && popup) {
+            popup.opener=null; popup.location.href=blobUrl; status('Imprime desde el visor del PDF a tamano real.');
+          } else {
+            const link=document.createElement('a'); link.href=blobUrl; link.download=current.number+'.pdf'; link.click();
+          }
+          setTimeout(() => URL.revokeObjectURL(blobUrl), 120_000);
         }
       } catch(error) { popup?.close(); throw error; }
       finally { busy=false; updateSummary(); }

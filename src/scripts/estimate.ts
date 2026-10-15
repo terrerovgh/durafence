@@ -23,6 +23,7 @@ import {
 } from '../data/estimate';
 import { bayFromEstimate, drawBay } from './fence-drawing';
 import { customerErrors, type EstimateCustomer } from '../data/estimate-mail';
+import { PdfLayoutOverflowError } from '../pdf/layout-error.ts';
 import { feet } from '../drawing/fence-scene.ts';
 import { createEstimateTracker } from './analytics';
 
@@ -522,9 +523,9 @@ async function printEstimate(root: HTMLElement, result: Estimate): Promise<void>
     popup.location.href = url;
     setTimeout(() => URL.revokeObjectURL(url), 120_000);
     setEmailStatus(root, 'Use the PDF viewer to print or save at actual size.', '');
-  } catch {
+  } catch (error) {
     popup.close();
-    setEmailStatus(root, 'The PDF could not be created. Try again.', 'bad');
+    setEmailStatus(root, error instanceof PdfLayoutOverflowError ? error.message : 'The PDF could not be created. Try again.', 'bad');
   }
 }
 

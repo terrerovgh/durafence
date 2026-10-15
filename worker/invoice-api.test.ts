@@ -1,3 +1,4 @@
+import { PDFDocument } from 'pdf-lib';
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { handleInvoiceArea, isInvoiceArea, type InvoiceEnv } from './invoice-api.ts';
@@ -168,4 +169,61 @@ test('creation API rejects signed non-finite dates before writing to SQLite',asy
     assert.equal(db.connection.prepare('SELECT COUNT(*) AS n FROM invoice_documents').get()?.n,0);
     assert.equal(db.connection.prepare('SELECT COUNT(*) AS n FROM invoice_revisions').get()?.n,0);
   });
+});
+
+test('private overflow allows storage but blocks preview/download/send before ledger reservation', async () => {
+  const fixture = await accessFixture(), db = new MemoryDB(), originalFetch = globalThis.fetch;
+  let sent = 0, attachmentPages = 0;
+  globalThis.fetch = async (input, options) => {
+    if (String(input) === fixture.issuer + '/cdn-cgi/access/certs') return Response.json({keys:[fixture.key]});
+    if (String(input) === 'https://api.resend.com/emails') {
+      sent += 1;
+      const message = JSON.parse(String(options?.body));
+      attachmentPages = (await PDFDocument.load(Buffer.from(message.attachments[0].content,'base64'))).getPageCount();
+      return Response.json({id:'synthetic-one-page'});
+    }
+    throw new Error('Unexpected external fetch');
+  };
+  try {
+    const token = await fixture.issue();
+    const env: InvoiceEnv = {INVOICE_DB:db,INVOICE_ACCESS_ISSUER:fixture.issuer,INVOICE_ACCESS_AUD:fixture.audience,
+      RESEND_API_KEY:'synthetic-key',ASSETS:{fetch:async () => new Response('private shell')}};
+    const request = (path: string, method = 'GET', body?: unknown) => new Request('https://example.test/api/invoices' + path,{
+      method,headers:{origin:'https://example.test','content-type':'application/json','cf-access-jwt-assertion':token},
+      ...(body === undefined ? {} : {body:JSON.stringify(body)}),
+    });
+    const order = creationOrder(); order.terms = 'T'.repeat(4000);
+    const creation = await handleInvoiceArea(request('','POST',{order,creationKey:crypto.randomUUID()}),env);
+    assert.equal(creation.status,201);
+    const document = (await creation.json()).document;
+    for (const response of [
+      await handleInvoiceArea(request('/preview','POST',{order,id:document.id,version:1}),env),
+      await handleInvoiceArea(request('/' + document.id + '/pdf?download=1'),env),
+      await handleInvoiceArea(request('/' + document.id + '/send','POST',{version:1}),env),
+    ]) {
+      assert.equal(response.status,422); assert.equal(response.headers.get('cache-control'),'private, no-store');
+      const body = await response.json();
+      assert.equal(body.error,'pdf_layout_overflow'); assert.match(body.message,/una sola pagina Letter/);
+      assert.doesNotMatch(body.message,/T{20}|seller@example/);
+    }
+    assert.equal(sent,0);
+    assert.equal(db.connection.prepare('SELECT COUNT(*) AS n FROM invoice_sends').get()?.n,0);
+    const persisted = await handleInvoiceArea(request('/' + document.id),env);
+    assert.equal((await persisted.json()).document.order.terms,order.terms);
+    // A legacy sent outcome stays idempotent even when its old layout no longer fits.
+    db.connection.prepare('INSERT INTO invoice_sends (document_id,version,idempotency_key,state,created_at,updated_at) VALUES (?,?,?,?,?,?)')
+      .run(document.id,1,'synthetic-legacy','sent','2026-10-14T12:00:00Z','2026-10-14T12:00:00Z');
+    assert.equal((await handleInvoiceArea(request('/' + document.id + '/send','POST',{version:1}),env)).status,200);
+    assert.equal(sent,0);
+    order.terms = 'Confirm dimensions before installation.';
+    const updated = await handleInvoiceArea(request('/' + document.id,'PUT',{version:1,order}),env);
+    assert.equal(updated.status,200);
+    const normal = await handleInvoiceArea(request('/' + document.id + '/pdf?version=2'),env);
+    assert.equal(normal.status,200);
+    assert.equal((await PDFDocument.load(await normal.arrayBuffer())).getPageCount(),1);
+    assert.equal((await handleInvoiceArea(request('/' + document.id + '/send','POST',{version:2}),env)).status,200);
+    assert.equal(sent,1); assert.equal(attachmentPages,1);
+    assert.equal((await handleInvoiceArea(request('/' + document.id + '/send','POST',{version:2}),env)).status,200);
+    assert.equal(sent,1);
+  } finally { globalThis.fetch = originalFetch; db.connection.close(); }
 });

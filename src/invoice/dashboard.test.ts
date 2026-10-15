@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { editFootage, syncFootageInputs } from './dashboard.ts';
+import { editFootage, syncFootageInputs, fetchInvoicePdf } from './dashboard.ts';
 import { calculate, newOrder } from './model.ts';
 import { setIncludedCameras, setGateCount } from './job-setup.ts';
 
@@ -109,4 +109,19 @@ test('multiple runs remain readonly and reject primary edits without refreshing 
   syncFootageInputs(order, primary, [front], null);
   assert.equal(primary.value, '40');
   assert.equal(primary.readOnly, false);
+});
+
+test('PDF fetch surfaces 422 before any viewer or download receives a blob', async (t) => {
+  const fetched = t.mock.method(globalThis,'fetch',async (_url, options) => {
+    assert.equal(options?.credentials,'same-origin'); assert.equal(options?.cache,'no-store');
+    return Response.json({ok:false,error:'pdf_layout_overflow',message:'El documento no cabe en una sola pagina Letter.'},{status:422});
+  });
+  await assert.rejects(() => fetchInvoicePdf('/api/invoices/synthetic/pdf'),/no cabe en una sola pagina Letter/);
+  assert.equal(fetched.mock.callCount(),1);
+});
+test('PDF fetch accepts a PDF and rejects an HTML session response', async (t) => {
+  const fetched = t.mock.method(globalThis,'fetch',async () => new Response('synthetic-pdf',{headers:{'content-type':'application/pdf'}}));
+  assert.equal(await (await fetchInvoicePdf('/synthetic.pdf')).text(),'synthetic-pdf');
+  fetched.mock.mockImplementation(async () => new Response('<html>Sign in</html>',{headers:{'content-type':'text/html'}}));
+  await assert.rejects(() => fetchInvoicePdf('/synthetic.pdf'),/Comprueba tu sesion/);
 });

@@ -9,6 +9,7 @@ import {
   invoiceAddress,
   prepareEstimateLetter,
 } from '../../src/data/estimate-mail.ts';
+import { PdfLayoutOverflowError } from '../../src/pdf/layout-error.ts';
 import { validateUsAddress } from '../../src/data/us-address.ts';
 
 export const estimateCopies = ['abelterreros@yahoo.com', 'allneedsdiscount1@gmail.com'] as const;
@@ -55,8 +56,8 @@ async function overLimit(request: Request): Promise<boolean> {
       new Response(String(count + 1), { headers: { 'cache-control': 'public, max-age=3600' } }),
     );
     return false;
-  } catch (error) {
-    console.error(JSON.stringify({ event: 'estimate_email_limit_failed', message: error instanceof Error ? error.message : 'unknown' }));
+  } catch {
+    console.error(JSON.stringify({ event: 'estimate_email_limit_failed' }));
     return false;
   }
 }
@@ -78,11 +79,16 @@ export async function onRequestPost(context: { request: Request; env: EstimateEm
   if (prepared.kind === 'honeypot') return json({ ok: true });
   const apiKey = env.RESEND_API_KEY?.trim() || env.RESENT_API_KEY?.trim();
   if (!apiKey) return fail(503, 'not_configured', 'Email is not set up on this server yet.');
-  if (await overLimit(request)) {
-    return fail(429, 'rate_limited', 'Too many estimates were sent from this network. Wait an hour and try again.');
+  const { letter } = prepared;
+  let pdf: Uint8Array;
+  try {
+    pdf = await buildEstimatePdf(letter);
+  } catch (error) {
+    if (error instanceof PdfLayoutOverflowError) return fail(422, 'pdf_layout_overflow', error.message);
+    console.error(JSON.stringify({ event: 'estimate_pdf_failed' }));
+    return fail(500, 'pdf_failed', 'The estimate PDF could not be built.');
   }
 
-  const { letter } = prepared;
   const address = await (context.validateAddress ?? validateUsAddress)(letter.customer.address);
   if (address.kind === 'invalid') {
     return fail(400, 'invalid_address', 'Check the project address.', {
@@ -92,14 +98,11 @@ export async function onRequestPost(context: { request: Request; env: EstimateEm
   if (address.kind === 'unavailable') {
     return fail(503, 'address_unavailable', 'Address verification is temporarily unavailable. Please try again.');
   }
-  const draft = draftEstimateEmail(letter);
-  let pdf: Uint8Array;
-  try {
-    pdf = await buildEstimatePdf(letter);
-  } catch (error) {
-    console.error(JSON.stringify({ event: 'estimate_pdf_failed', message: error instanceof Error ? error.message : 'unknown' }));
-    return fail(500, 'pdf_failed', 'The estimate PDF could not be built.');
+  // Only a readable, complete PDF can consume an email attempt.
+  if (await overLimit(request)) {
+    return fail(429, 'rate_limited', 'Too many estimates were sent from this network. Wait an hour and try again.');
   }
+  const draft = draftEstimateEmail(letter);
 
   const copies = copiesFor(letter.customer.email);
   try {

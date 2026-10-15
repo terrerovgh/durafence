@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { PDFDocument, StandardFonts, type PDFPage } from 'pdf-lib';
 import { fenceScene, feet, drawingLimits, type BayDrawing } from './fence-scene.ts';
-import { appendTechnicalDrawing, renderFenceScene, drawingLines } from './pdf-drawing.ts';
+import { renderFenceScene, drawingLines } from './pdf-drawing.ts';
 import { estimateBay, estimateSchedule, invoiceBay, invoiceSchedule } from './order-drawing.ts';
 import { drawBay } from '../scripts/fence-drawing.ts';
 import { priceEstimate, applyDiscount } from '../data/estimate.ts';
@@ -126,15 +126,13 @@ test('Letter drawing labels fit their measured boxes at 9 pt or larger inside 40
     renderFenceScene(page, regular, bold, fenceScene({ ...base, heightFt, embedFt: 20, postSpacingFt, rails: 100 }));
   }
   renderFenceScene(page, regular, bold, fenceScene({ ...base, hasFence: false }));
-  appendTechnicalDrawing(doc, regular, bold, base, Array.from({ length: 100 }, (_, i) => 'Run ' + i + ': ' + 'Long reference '.repeat(30)));
-  assert.ok(doc.getPageCount() > 2);
   for (const line of drawingLines('A'.repeat(500) + ' \u4e2d\u6587', regular, 9, 532)) {
     assert.ok(regular.widthOfTextAtSize(line, 9) <= 532);
   }
   assert.doesNotThrow(() => renderFenceScene(doc.addPage([612, 792]), regular, bold, fenceScene(base)));
 });
 
-test('estimate and invoice PDFs generate custom-height appendices and safe non-Latin references', async () => {
+test('estimate and invoice PDFs keep custom heights and safe non-Latin references on one page', async () => {
   const result = priceEstimate({ lengthFt: 200, packageId: 'standard', labor: 'installed',
     extraGates: { ft12: 0, ft6: 0, ft3: 0 }, extraScrewLb: 0, aluminumGates: [] });
   assert.match(estimateSchedule(result).join('\n'), /gate heights and locations are not supplied/);
@@ -143,7 +141,7 @@ test('estimate and invoice PDFs generate custom-height appendices and safe non-L
     const bytes = await buildEstimatePdf({ customer: { name: '\u4e2d\u6587', address: 'Synthetic', email: 'test@example.test', phone: '' },
       result, heightFt, payByCard: false, discount: applyDiscount(result.totalCents, ''), sentOn: 'October 14, 2026' });
     const pdf = await PDFDocument.load(bytes);
-    assert.ok(pdf.getPageCount() >= 2);
+    assert.equal(pdf.getPageCount(), 1);
     for (const page of pdf.getPages()) assert.deepEqual(page.getSize(), { width: 612, height: 792 });
   }
   const order = newOrder();
@@ -152,5 +150,5 @@ test('estimate and invoice PDFs generate custom-height appendices and safe non-L
   order.items = [{ id: 'one', description: 'Accessory only', quantity: 1, unit: 'unit', unitCents: 100, included: false }];
   const invoice: StoredInvoice = { id: 'synthetic', seq: 1, version: 1, number: 'DFM-TEST', kind: 'estimate',
     createdAt: '2026-10-14T12:00:00Z', updatedAt: '2026-10-14T12:00:00Z', actor: 'test@example.test', order, payments: [] };
-  assert.ok((await PDFDocument.load(await buildInvoicePdf(invoice))).getPageCount() >= 2);
+  assert.equal((await PDFDocument.load(await buildInvoicePdf(invoice))).getPageCount(), 1);
 });
