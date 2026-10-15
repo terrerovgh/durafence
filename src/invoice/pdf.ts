@@ -1,4 +1,6 @@
 import { PDFDocument, StandardFonts, rgb, type PDFPage, type PDFFont } from 'pdf-lib';
+import { appendTechnicalDrawing } from '../drawing/pdf-drawing.ts';
+import { invoiceBay, invoiceSchedule } from '../drawing/order-drawing.ts';
 import { invoiceLogoPng } from '../data/invoice-logo.ts';
 import { site } from '../data/site.ts';
 import { calculate, money, type StoredInvoice } from './model.ts';
@@ -7,7 +9,6 @@ export const PAPER = { width: 612, height: 792, margin: 40 };
 const ink = rgb(0.067, 0.067, 0.067);
 const gold = rgb(0.725, 0.522, 0.294);
 const rule = rgb(0.72, 0.68, 0.62);
-const paper = rgb(0.954, 0.942, 0.918);
 export const pdfText = (value: string) => value.replace(/[^\u0020-\u007E\u00A0-\u00FF]/g, '?');
 
 function wrap(value: string, font: PDFFont, size: number, width: number): string[] {
@@ -38,7 +39,7 @@ export async function buildInvoicePdf(invoice: StoredInvoice): Promise<Uint8Arra
   const { width: pageWidth, height: pageHeight, margin } = PAPER;
   const contentWidth = pageWidth - 2 * margin;
   let page: PDFPage = doc.addPage([pageWidth, pageHeight]);
-  let x = 322, width = pageWidth - margin - x, y = 0;
+  let x = margin, width = contentWidth, y = 0;
   const text = (value: string, left: number, top: number, size = 9, strong = false) => {
     page.drawText(pdfText(value), { x: left, y: top, size, font: strong ? bold : regular, color: ink });
   };
@@ -95,29 +96,6 @@ export async function buildInvoicePdf(invoice: StoredInvoice): Promise<Uint8Arra
   const right = paragraph(invoice.order.customer.address || 'Not provided', 322, customerTop - 16, 250, 9, 11);
   const start = Math.min(left, right) - 27;
   line(margin, pageWidth - margin, start + 13);
-  text('TECHNICAL DRAWING', margin, start, 9, true); text('NOT TO SCALE', 232, start, 6);
-  line(margin, 303, start - 9, gold);
-  if (result.grossFt > 0) {
-    const bottom = start - 205, ground = bottom + 40, above = 100;
-    page.drawRectangle({ x: margin, y: bottom, width: 263, height: 185, color: paper, borderColor: rule, borderWidth: 0.6 });
-    for (const postX of [margin + 50, margin + 184]) {
-      page.drawRectangle({ x: postX - 4, y: ground - 22, width: 16, height: 22, color: rgb(0.84, 0.82, 0.79) });
-      page.drawRectangle({ x: postX, y: ground - 22, width: 8, height: above + 22, borderColor: ink, borderWidth: 0.6, color: rgb(0.77, 0.78, 0.79) });
-    }
-    const count = Math.max(1, Math.round(result.spacingFt * 2));
-    for (let i = 0; i < count; i += 1) page.drawRectangle({
-      x: margin + 58 + i * 126 / count + 0.5, y: ground, width: Math.max(0.5, 126 / count - 1), height: above, borderColor: ink, borderWidth: 0.4,
-    });
-    for (let i = 0; i < result.railCount; i += 1) line(margin + 58, margin + 184, ground + above * (i + 1) / (result.railCount + 1), ink, 1.7);
-    line(margin + 36, margin + 212, ground, ink);
-    text(invoice.order.heightFt + ' ft', margin + 6, ground + 45, 7);
-    text(invoice.order.embedFt + ' ft', margin + 6, ground - 15, 7);
-    text(result.spacingFt + ' ft O.C.', margin + 88, ground + above + 10, 7);
-    text(result.railCount + ' RAILS', margin + 200, ground + 58, 6);
-    text('TYPICAL BAY', margin + 12, bottom + 9, 7, true);
-    paragraph('Height: ' + invoice.order.heightFt + ' ft. Posts: ' + (invoice.order.heightFt + invoice.order.embedFt) + ' ft, including ' + invoice.order.embedFt + ' ft embedment. Confirm structural requirements on site.', margin, bottom - 16, 263, 7, 10);
-    paragraph('Contracted run: ' + result.grossFt + ' ft. Openings: ' + result.openingFt + ' ft. Solid fence: ' + result.netFt + ' ft.', margin, bottom - 62, 263, 7, 10);
-  } else paragraph('Gate / accessory order. No fence elevation applicable.', margin, start - 30, 263, 9, 13);
   y = start;
   heading('Order details');
   row('Package', invoice.order.packageId === 'standard' ? 'Standard' : 'Premium');
@@ -142,6 +120,7 @@ export async function buildInvoicePdf(invoice: StoredInvoice): Promise<Uint8Arra
     for (const payment of invoice.payments) row(payment.date + ' / ' + payment.method, money(payment.amountCents), payment.note);
   }
   if (invoice.order.terms) { heading('Terms'); note(invoice.order.terms); }
+  appendTechnicalDrawing(doc, regular, bold, invoiceBay(invoice.order, result), invoiceSchedule(invoice.order, result));
   const pages = doc.getPages();
   pages.forEach((current, index) => {
     page = current; line(margin, pageWidth - margin, 59, gold); text(site.name + ' / ' + site.region, margin, 45, 7);

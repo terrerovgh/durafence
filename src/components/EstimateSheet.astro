@@ -674,14 +674,15 @@ const aluminumNote = `${formatMoney(aluminumRate.installed * 100)} a foot instal
   }
 
   .inv-body {
-    display: grid;
-    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+    display: flex;
+    flex-direction: column;
     gap: 0.24in;
-    align-items: start;
+    align-items: stretch;
     margin-top: 0.2in;
   }
 
   .inv-order {
+    order: 0;
     min-width: 0;
   }
 
@@ -804,6 +805,9 @@ const aluminumNote = `${formatMoney(aluminumRate.installed * 100)} a foot instal
   }
 
   .inv-drawing {
+    order: 1;
+    width: 100%;
+    break-before: page;
     margin: 0;
     padding: 0;
     box-sizing: border-box;
@@ -891,7 +895,7 @@ const aluminumNote = `${formatMoney(aluminumRate.installed * 100)} a foot instal
 
     @page {
       size: letter;
-      margin: 0.5in;
+      margin: 40pt;
       background: #fff;
     }
   }

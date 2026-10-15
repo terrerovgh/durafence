@@ -23,6 +23,7 @@ import {
 } from '../data/estimate';
 import { bayFromEstimate, drawBay } from './fence-drawing';
 import { customerErrors, type EstimateCustomer } from '../data/estimate-mail';
+import { feet } from '../drawing/fence-scene.ts';
 import { createEstimateTracker } from './analytics';
 
 function readDecimal(raw: string): number {
@@ -189,13 +190,12 @@ function fillInvoice(
     svg.setAttribute('role', 'img');
     svg.setAttribute('preserveAspectRatio', 'xMidYMin meet');
     host.replaceChildren(svg);
-    if (result.hasFence) drawBay(svg, bayFromEstimate(result, heightFt), 'invoice');
-    else host.textContent = 'Gate / accessory order — no fence elevation applicable.';
+    drawBay(svg, bayFromEstimate(result, heightFt), 'invoice');
   }
   if (caption) caption.textContent = result.hasFence ? root.querySelector('[data-drawing-note]')?.textContent ?? '' : '';
   if (note) {
-    note.hidden = !result.hasFence || heightFt === 6;
-    note.textContent = `Requested height: ${formatFeetInches(heightFt)}. The typical detail illustrates a 6 ft fence; confirm the final height and post specification before fabrication.`;
+    note.hidden = !result.hasFence;
+    note.textContent = 'Requested height: ' + feet(heightFt) + '. Post length: ' + feet(heightFt + 2) + ', including 2 ft embedment. Typical detail only; confirm before fabrication.';
   }
   if (!order) return;
 
@@ -501,6 +501,33 @@ function estimatePayload(root: HTMLElement, heightFt: number) {
   };
 }
 
+/** Generate locally with the same renderer as the server email attachment. */
+async function printEstimate(root: HTMLElement, result: Estimate): Promise<void> {
+  const height = readHeight(root);
+  const discount = applyDiscount(result.totalCents, discountCode(root));
+  if (result.empty || result.issues.length || height.error || discount.error) {
+    setEmailStatus(root, height.error || discount.error || 'Fix the estimate before printing.', 'bad');
+    return;
+  }
+  // Open synchronously to retain the user gesture on iPad; rendering is asynchronous.
+  const popup = window.open('about:blank', '_blank');
+  if (!popup) { setEmailStatus(root, 'Allow the PDF window to print or save.', 'bad'); return; }
+  popup.opener = null;
+  try {
+    const { buildEstimatePdf } = await import('../data/estimate-pdf.ts');
+    const bytes = await buildEstimatePdf({ customer: readCustomer(root), result, heightFt: height.feet,
+      payByCard: payByCard(root), discount,
+      sentOn: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) });
+    const url = URL.createObjectURL(new Blob([new Uint8Array(bytes)], { type: 'application/pdf' }));
+    popup.location.href = url;
+    setTimeout(() => URL.revokeObjectURL(url), 120_000);
+    setEmailStatus(root, 'Use the PDF viewer to print or save at actual size.', '');
+  } catch {
+    popup.close();
+    setEmailStatus(root, 'The PDF could not be created. Try again.', 'bad');
+  }
+}
+
 async function emailEstimate(root: HTMLElement, result: Estimate): Promise<void> {
   const button = root.querySelector<HTMLButtonElement>('[data-email-invoice]');
   if (!button || button.dataset.sending === 'true' || result.empty) return;
@@ -585,9 +612,9 @@ function render(root: HTMLElement, result: Estimate): void {
   const note = root.querySelector<HTMLElement>('[data-drawing-note]');
   const caption = root.querySelector<HTMLElement>('[data-drawing-caption]');
   if (drawing) drawBay(drawing, bayFromEstimate(result, height.feet));
-  const bayNote = result.runLabel
-    ? `One bay of a ${result.runLabel} ft run. Posts are 8 ft, with 2 ft in concrete, ${result.postSpacingFt} ft on center. Pickets are 6 ft with a pointed top.`
-    : `Posts are 8 ft, with 2 ft in concrete. Pickets are 6 ft with a pointed top. Enter the run to price the line.`;
+  const bayNote = result.hasFence
+    ? 'Typical bay, not to scale. Above ground: ' + feet(height.feet) + '; embedment: 2 ft; post length: ' + feet(height.feet + 2) + '. Spacing: ' + feet(result.postSpacingFt) + ' O.C.; ' + result.railCount + ' rails per bay.'
+    : 'No fence run. Gate / accessory order; no fence elevation applicable.';
   if (note) note.textContent = bayNote;
   if (caption) caption.textContent = drawing?.querySelector('title')?.textContent ?? bayNote;
 
@@ -692,7 +719,7 @@ export function mountEstimate(): void {
   form.addEventListener('change', (event) => update(event.isTrusted));
   root.querySelector('[data-pay-card]')?.addEventListener('change', (event) => update(event.isTrusted));
   root.querySelector('[data-discount-code]')?.addEventListener('input', (event) => update(event.isTrusted));
-  root.querySelector('[data-print-invoice]')?.addEventListener('click', () => window.print());
+  root.querySelector('[data-print-invoice]')?.addEventListener('click', () => { void printEstimate(root, latest); });
   root.querySelector('[data-email-invoice]')?.addEventListener('click', () => {
     void emailEstimate(root, latest);
   });

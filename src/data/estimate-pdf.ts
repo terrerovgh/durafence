@@ -1,8 +1,10 @@
 /** The PDF shared by Print / Save PDF and Email PDF. */
 
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage, type RGB } from 'pdf-lib';
-import { formatFeetInches, formatReceiptMoney, picketWidthIn, type Estimate } from './estimate.ts';
+import { formatFeetInches, formatReceiptMoney } from './estimate.ts';
 import { letterTotals, type EstimateLetter } from './estimate-mail.ts';
+import { appendTechnicalDrawing } from '../drawing/pdf-drawing.ts';
+import { estimateBay, estimateSchedule } from '../drawing/order-drawing.ts';
 import { invoiceLogoPng } from './invoice-logo.ts';
 import { site } from './site.ts';
 
@@ -65,10 +67,8 @@ class Sheet {
   draw(letter: EstimateLetter): void {
     this.header(letter);
     this.customer(letter);
-    this.drawing(letter.result, letter.heightFt);
-    this.x = 322;
-    this.width = pageWidth - margin - this.x;
-    this.y = 574;
+    this.x = margin;
+    this.width = contentWidth;
     this.heading('Order details');
     this.spec('Package', letter.result.packageName);
     this.spec('Labor', letter.result.laborName);
@@ -103,11 +103,12 @@ class Sheet {
     if (letter.result.hasFence) {
       this.small('Corners and gate openings can change the post count. The price follows the footage.');
     }
+    appendTechnicalDrawing(this.doc, this.regular, this.bold, estimateBay(letter.result, letter.heightFt), estimateSchedule(letter.result));
     this.footer();
   }
 
   private header(letter: EstimateLetter): void {
-    const top = pageHeight - 28;
+    const top = pageHeight - margin;
     this.page.drawRectangle({ x: margin, y: top - 54, width: 54, height: 54, color: ink });
     this.page.drawImage(this.logo, { x: margin + 2, y: top - 51, width: 50, height: 46 });
     this.label('DURA FENCE METAL', margin + 67, top - 13, 13, this.bold, ink);
@@ -127,79 +128,9 @@ class Sheet {
     for (const value of [letter.customer.name || 'Not provided', letter.customer.phone, letter.customer.email]) {
       if (value) leftY = this.text(value, margin, leftY, 9, this.regular, ink, 250, 11);
     }
-    this.text(letter.customer.address || 'Not provided', 322, top - 15, 9, this.regular, ink, 250, 11);
-    this.rule(margin, pageWidth - margin, 604, rule, 0.6);
-  }
-
-  private drawing(result: Estimate, heightFt: number): void {
-    const x = margin;
-    const width = 263;
-    this.label('TECHNICAL DRAWING', x, 574, 9, this.bold, ink);
-    this.right('NOT TO SCALE', x + width, 575, 6.5, this.regular, muted);
-    this.rule(x, x + width, 565, gold, 0.8);
-    const boxBottom = 336;
-    const boxTop = 555;
-    const paper = rgb(0.954, 0.942, 0.918);
-    this.page.drawRectangle({ x, y: boxBottom, width, height: boxTop - boxBottom, color: paper, borderColor: rule, borderWidth: 0.6 });
-    if (!result.hasFence) {
-      this.text('Gate / accessory order - no fence elevation applicable.', x + 8, boxTop - 28, 9, this.regular, ink, width - 16, 12);
-      return;
-    }
-
-    const left = x + 50;
-    const right = x + 181;
-    const postWidth = 8;
-    const postTop = 522;
-    const ground = 453;
-    const postBottom = 430;
-    const count = Math.max(1, Math.round(result.postSpacingFt * 12 / picketWidthIn));
-    const spacing = (right - left - postWidth) / count;
-    const postColor = rgb(0.77, 0.78, 0.79);
-    for (const post of [left, right]) {
-      this.page.drawRectangle({ x: post - 4, y: postBottom, width: 16, height: ground - postBottom, color: rgb(0.84, 0.82, 0.79), borderColor: ink, borderWidth: 0.5 });
-      this.page.drawRectangle({ x: post, y: postBottom, width: postWidth, height: postTop - postBottom, color: postColor, borderColor: ink, borderWidth: 0.6 });
-    }
-    for (let i = 0; i < count; i += 1) {
-      const start = left + postWidth + i * spacing + 0.5;
-      const w = Math.max(1, spacing - 1);
-      this.page.drawSvgPath(`M 0 0 L 0 -58 L ${w / 2} -66 L ${w} -58 L ${w} 0 Z`, {
-        x: start, y: ground + 1, color: rgb(0.91, 0.89, 0.84), borderColor: ink, borderWidth: 0.4,
-      });
-    }
-    const railYs = result.railCount === 3 ? [ground + 17, ground + 34, ground + 51] : [ground + 22, ground + 46];
-    for (const railY of railYs) {
-      this.rule(left + postWidth, right, railY, ink, 1.7);
-      for (let i = 0; i < count; i += 1) {
-        this.page.drawCircle({ x: left + postWidth + (i + 0.5) * spacing, y: railY, size: 1.2, color: rgb(1, 1, 1), borderColor: ink, borderWidth: 0.5 });
-      }
-    }
-    this.rule(left - 12, right + 20, ground, ink, 0.8);
-    this.rule(left + 4, right + 4, 532, ink, 0.5);
-    this.label(`${formatFeetInches(result.postSpacingFt)} O.C.`, left + 48, 536, 7, this.regular, ink);
-    this.label('6 ft', x + 7, 485, 7, this.regular, ink);
-    this.label('2 ft', x + 7, 436, 7, this.regular, ink);
-    this.label(`${result.screwsPerPicket} SCREWS / PICKET`, right + 13, 505, 6.3, this.regular, ink);
-    this.label(`${result.railCount} RAILS`, right + 13, 480, 6.3, this.regular, ink);
-
-    this.page.drawRectangle({ x: x + 8, y: boxBottom + 8, width: width - 16, height: 79, borderColor: rule, borderWidth: 0.6 });
-    this.label('DURA FENCE METAL', x + 16, boxBottom + 73, 8, this.bold, ink);
-    this.right('NTS', x + width - 15, boxBottom + 73, 7, this.regular, muted);
-    this.label('ELEVATION - ONE BAY', x + 16, boxBottom + 62, 7.3, this.regular, ink);
-    const detail = [
-      `PACKAGE   ${result.packageName.toUpperCase()}`,
-      `POSTS        8 ft, 2 ft in concrete`,
-      `PICKETS     ${count} x 6 ft pointed`,
-      `RAILS        ${result.railCount}`,
-      `SCREWS     ${result.screwsPerPicket} per picket`,
-      `ABOVE       6 ft`,
-      `RUN             ${result.runLabel || 'No fence run'} ft`,
-    ];
-    detail.forEach((value, index) => this.label(value, x + 16, boxBottom + 52 - index * 6.8, 6.2, this.regular, ink));
-    this.text(`One bay of a ${result.runLabel} ft run. Posts are 8 ft, with 2 ft in concrete.`, x, 323, 7, this.regular, muted, width, 9);
-    this.page.drawRectangle({ x, y: 235, width, height: 72, borderColor: rule, borderWidth: 0.6 });
-    this.label('INSTALLATION & MATERIALS', x + 8, 291, 8, this.bold, gold);
-    this.text(`${result.packageName}, ${result.laborName}. Posts spaced ${formatFeetInches(result.postSpacingFt)} on center, ${result.railCount} rails per bay and ${result.screwsPerPicket} screws per picket.`, x + 8, 278, 7.7, this.regular, ink, width - 16, 10);
-    this.text(`Typical bay shown. Requested height: ${formatFeetInches(heightFt)}. Confirm final dimensions before fabrication.`, x + 8, 253, 7, this.regular, muted, width - 16, 8);
+    const rightY = this.text(letter.customer.address || 'Not provided', 322, top - 15, 9, this.regular, ink, 250, 11);
+    this.y = Math.min(leftY, rightY) - 27;
+    this.rule(margin, pageWidth - margin, this.y + 13, rule, 0.6);
   }
 
   private heading(title: string): void {
@@ -259,9 +190,14 @@ class Sheet {
   }
 
   private footer(): void {
-    this.rule(margin, pageWidth - margin, 51, gold, 0.7);
-    this.label(`${site.name} / ${site.region}`, margin, 38, 7, this.regular, muted);
-    this.right('Thank you for choosing Dura Fence Metal.', pageWidth - margin, 38, 7, this.regular, muted);
+    const pages = this.doc.getPages();
+    pages.forEach((page, index) => {
+      this.page = page;
+      this.rule(margin, pageWidth - margin, 59, gold, 0.7);
+      this.label(site.name + ' / ' + site.region, margin, 45, 7, this.regular, muted);
+      this.label('Thank you for choosing Dura Fence Metal.', 265, 45, 7, this.regular, muted);
+      this.right('Page ' + (index + 1) + ' of ' + pages.length, pageWidth - margin, 45, 7, this.regular, muted);
+    });
   }
 
   private ensure(height: number): void {

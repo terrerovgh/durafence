@@ -10,6 +10,36 @@ class InvoiceRequestError extends Error {
   readonly status: number;
   constructor(message: string, status: number) { super(message); this.status = status; }
 }
+type FootageInput = Pick<HTMLInputElement, 'value' | 'readOnly'>;
+
+/** Update the draft without replacing the input or normalizing its in-progress text. */
+export function editFootage(order: Order, input: Pick<FootageInput, 'value'>, refresh: (createdRun: boolean) => void): boolean {
+  if (order.runs.length > 1) return false;
+  const before = order.runs.length;
+  setFootage(order, input.value === '' ? 0 : Number(input.value));
+  refresh(order.runs.length !== before);
+  return true;
+}
+
+/** Synchronize the other view of the length, leaving the active input untouched. */
+export function syncFootageInputs(order: Order, primary: FootageInput | null,
+  runs: readonly (FootageInput | null)[], active: unknown): void {
+  if (primary) {
+    primary.readOnly = order.runs.length > 1;
+    if (primary !== active) {
+      const total = footageOf(order);
+      const value = total > 0 || primary.readOnly ? String(total) : '';
+      if (primary.value !== value) primary.value = value;
+    }
+  }
+  runs.forEach((input, index) => {
+    if (input && input !== active && order.runs[index]) {
+      const value = String(order.runs[index].lengthFt);
+      if (input.value !== value) input.value = value;
+    }
+  });
+}
+
 export function mountDashboard(): void {
   const root = document.querySelector<HTMLElement>('#invoice-dashboard');
   if (!root) return;
@@ -53,6 +83,10 @@ export function mountDashboard(): void {
   const stepper = (action: string, value: number, minusLabel: string, plusLabel: string) =>
     `<div class='stepper'><button class='stepper-btn' type='button' data-action='${action}' data-delta='-1' aria-label='${esc(minusLabel)}'>−</button><output>${esc(value)}</output><button class='stepper-btn' type='button' data-action='${action}' data-delta='1' aria-label='${esc(plusLabel)}'>+</button></div>`;
 
+  const runCards = () => order.runs.map((run, index) => box('Tramo ' + (index + 1),
+    field('Nombre del tramo', `runs.${index}.name`, run.name) + field('Pies de este tramo', `runs.${index}.lengthFt`, run.lengthFt, true)
+    + field('Punto inicial', `runs.${index}.startNode`, run.startNode) + field('Punto final', `runs.${index}.endNode`, run.endNode), 'remove-run', index)).join('');
+
   function render(focus?: string): void {
     const result = calculate(order, saved?.payments ?? []);
     node('[data-kind]').textContent = saved?.kind === 'invoice' ? 'Invoice' : 'Estimado';
@@ -77,14 +111,11 @@ export function mountDashboard(): void {
       + check('Postes propios separados', `gates.${index}.separatePosts`, gate.separatePosts)
       + check('Reforzar postes del gate', `gates.${index}.reinforced`, gate.reinforced)
       + button('gate-price', 'Cargar precio de catalogo', 'data-index=' + index), 'remove-gate', index)).join('');
-    const runCards = order.runs.map((run, index) => box('Tramo ' + (index + 1),
-      field('Nombre del tramo', `runs.${index}.name`, run.name) + field('Pies de este tramo', `runs.${index}.lengthFt`, run.lengthFt, true)
-      + field('Punto inicial', `runs.${index}.startNode`, run.startNode) + field('Punto final', `runs.${index}.endNode`, run.endNode), 'remove-run', index)).join('');
     const job = card('1. Trabajo del cliente', `<div class='job-board'>
       <div class='job-tile job-tile-wide'><span class='job-kicker'>Pies de cerca</span><input class='footage-input' data-footage inputmode='decimal' type='number' min='0' step='0.01' placeholder='Ej. 200' aria-label='Pies de cerca contratados' value='${multiRun ? esc(footage) : footage > 0 ? esc(footage) : ''}' ${multiRun ? 'readonly' : ''} /><p class='dash-muted'>${multiRun ? 'Hay varios tramos. Edita los pies de cada uno abajo. El total no cambia desde aqui.' : 'Escribe los pies contratados. Un solo numero basta. Los gates no los reducen.'}</p></div>
       <div class='job-tile'><span class='job-kicker'>Gates</span>${stepper('gate-count', order.gates.length, 'Quitar un gate', 'Agregar un gate')}<p class='dash-muted'>${order.gates.length ? order.gates.length + ' gate' + (order.gates.length === 1 ? '' : 's') + '. Elige el ancho de cada uno.' : 'Sin gates. Dejalo en cero si el cliente no quiere ninguno.'}</p></div>
       <div class='job-tile'><span class='job-kicker'>Camaras incluidas</span>${stepper('camera-count', order.cameras.included, 'Quitar una camara incluida', 'Agregar una camara incluida')}<div class='choice-row'>${[0,1,2].map((count) => `<button class='choice ${order.cameras.included === count ? 'is-selected' : ''}' type='button' data-action='camera-count' data-count='${count}'>${count}</button>`).join('')}</div><p class='dash-muted'>Por ejemplo: cero gates y dos camaras.</p></div>
-      </div>${gateCards}<details ${multiRun ? 'open' : ''}><summary>Tramos, camaras extra y esquinas</summary>${runCards}${button('add-run', 'Agregar tramo')}<div class='fields extra-cameras'>${field('Camaras adicionales cobradas', 'cameras.extra', order.cameras.extra, true)}${field('Precio de cada camara adicional, USD', 'cameras.unitCents', order.cameras.unitCents, true, true, true, 'Precio acordado')}</div><p class='dash-muted'>Usa el mismo nombre de punto en los extremos que comparten un poste. Si hay dos gates en un tramo, indica la distancia del segundo.</p></details>`,
+      </div>${gateCards}<details ${multiRun ? 'open' : ''}><summary>Tramos, camaras extra y esquinas</summary><div data-run-fields>${runCards()}</div>${button('add-run', 'Agregar tramo')}<div class='fields extra-cameras'>${field('Camaras adicionales cobradas', 'cameras.extra', order.cameras.extra, true)}${field('Precio de cada camara adicional, USD', 'cameras.unitCents', order.cameras.unitCents, true, true, true, 'Precio acordado')}</div><p class='dash-muted'>Usa el mismo nombre de punto en los extremos que comparten un poste. Si hay dos gates en un tramo, indica la distancia del segundo.</p></details>`,
       'Empieza por los pies, luego cuantos gates y cuantas camaras. Nada de eso viene elegido por ti.');
     const items = card('Productos y servicios adicionales', order.items.map((item, index) => box('Partida ' + (index + 1),
       field('Descripcion para el cliente', `items.${index}.description`, item.description)
@@ -121,11 +152,9 @@ export function mountDashboard(): void {
     const totalLabel = root.querySelector('[data-tablet-total]');
     if (feetLabel) feetLabel.textContent = footageOf(order) + ' ft · ' + order.gates.length + ' gates · ' + order.cameras.included + ' camaras';
     if (totalLabel) totalLabel.textContent = money(result.totalCents);
-    const footageInput = root.querySelector<HTMLInputElement>('[data-footage]');
-    if (footageInput && document.activeElement !== footageInput) {
-      const shown = footageOf(order);
-      footageInput.value = shown > 0 || order.runs.length > 1 ? String(shown) : '';
-    }
+    syncFootageInputs(order, root.querySelector<HTMLInputElement>('[data-footage]'),
+      order.runs.map((_, index) => root.querySelector<HTMLInputElement>("[data-path='runs." + index + ".lengthFt']")),
+      document.activeElement);
     for (const key of Object.keys(materialNames) as MaterialKey[]) {
       const target = root!.querySelector<HTMLElement>('[data-auto=' + key + ']');
       if (target) target.textContent = 'Calculado: ' + result.automatic[key] + (Object.hasOwn(order.overrides,key) ? ' / modificado' : '');
@@ -319,11 +348,20 @@ export function mountDashboard(): void {
     const target=event.target as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
     const path=target.dataset.path;
     if (target instanceof HTMLInputElement && target.hasAttribute('data-footage')) {
-      const before = order.runs.length;
-      setFootage(order, target.value === '' ? 0 : Number(target.value));
-      dirty = true;
-      if (order.runs.length !== before || order.runs.length > 1) render('[data-footage]');
-      else updateSummary();
+      editFootage(order, target, (createdRun) => {
+        dirty = true;
+        if (createdRun) {
+          // Only mount the new advanced row. The active footage input and next click target stay connected.
+          node('[data-run-fields]').innerHTML = runCards();
+          root.querySelectorAll<HTMLSelectElement>('select[data-path]').forEach((select) => {
+            if (!/^gates\.\d+\.runId$/.test(select.dataset.path ?? '')) return;
+            const option = document.createElement('option');
+            option.value = order.runs[0].id; option.textContent = order.runs[0].name;
+            select.append(option);
+          });
+        }
+        updateSummary();
+      });
       return;
     }
     if(!path) return;
