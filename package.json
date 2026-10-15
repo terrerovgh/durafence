@@ -10,7 +10,7 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "test": "node --experimental-strip-types --test src/data/estimate.test.ts src/data/estimate-mail.test.ts src/data/us-address.test.ts src/scripts/analytics.test.ts src/scripts/meta-commerce.test.ts src/data/shop-checkout.test.ts src/data/shop-checkout-mail.test.ts src/invoice/model.test.ts src/invoice/pdf.test.ts worker/invoice-auth.test.ts worker/invoice-store.test.ts worker/invoice-api.test.ts"
+    "test": "node --experimental-strip-types --test src/data/estimate.test.ts src/data/estimate-mail.test.ts src/data/us-address.test.ts src/scripts/analytics.test.ts src/scripts/meta-commerce.test.ts src/data/shop-checkout.test.ts src/data/shop-checkout-mail.test.ts src/invoice/job-setup.test.ts src/invoice/model.test.ts src/invoice/pdf.test.ts worker/invoice-auth.test.ts worker/invoice-store.test.ts worker/invoice-api.test.ts"
   },
   "devDependencies": {
     "@astrojs/sitemap": "^3.7.4",

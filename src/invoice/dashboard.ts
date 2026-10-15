@@ -1,4 +1,5 @@
 import { newOrder, calculate, gateDefault, money, type Order, type StoredInvoice, type MaterialKey } from './model.ts';
+import { footageOf, gateWidthChoices, setFootage, setGateCount, setIncludedCameras } from './job-setup.ts';
 const esc = (value: unknown) => String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/'/g, '&#39;');
 const percent = String.fromCharCode(37);
 const materialNames: Record<MaterialKey, string> = {
@@ -49,31 +50,42 @@ export function mountDashboard(): void {
   const button = (action: string, title: string, extra = '') => `<button class='small-button' type='button' data-action='${action}' ${extra}>${title}</button>`;
   const box = (title: string, content: string, remove: string, index: number) =>
     `<div class='row-box'><div class='row-title'><h3>${title}</h3>${button(remove, 'Quitar', 'data-index=' + index)}</div><div class='fields'>${content}</div></div>`;
+  const stepper = (action: string, value: number, minusLabel: string, plusLabel: string) =>
+    `<div class='stepper'><button class='stepper-btn' type='button' data-action='${action}' data-delta='-1' aria-label='${esc(minusLabel)}'>−</button><output>${esc(value)}</output><button class='stepper-btn' type='button' data-action='${action}' data-delta='1' aria-label='${esc(plusLabel)}'>+</button></div>`;
 
-  function render(): void {
+  function render(focus?: string): void {
     const result = calculate(order, saved?.payments ?? []);
     node('[data-kind]').textContent = saved?.kind === 'invoice' ? 'Invoice' : 'Estimado';
     node('[data-number]').textContent = saved?.number ?? 'Nuevo documento';
     node('[data-version]').textContent = saved ? `Revision ${saved.version} / ${historical ? 'consulta del historial' : dirty ? 'cambios sin guardar' : 'guardado'}` : 'Sin guardar';
-    const customer = card('1. Cliente y proyecto', `<div class='fields'>${field('Cliente / empresa', 'customer.name', order.customer.name)}${field('Telefono', 'customer.phone', order.customer.phone)}${field('Email del cliente', 'customer.email', order.customer.email)}${field('Direccion del proyecto', 'customer.address', order.customer.address)}</div>`);
-    const dims = card('2. Cerca y acuerdo', `<div class='fields'>${select('Paquete', 'packageId', order.packageId, [['standard','Standard'],['premium','Premium']])}${select('Servicio', 'labor', order.labor, [['installed','Instalacion'],['materials','Solo materiales']])}${field('Precio negociado por pie, USD', 'rateCents', order.rateCents, true, true, true, String(result.rateCents / 100))}${field('Altura de cerca, pies', 'heightFt', order.heightFt, true)}${field('Profundidad del poste, pies', 'embedFt', order.embedFt, true)}</div>${button('reset-rate', 'Usar precio del paquete')}<details><summary>Configuracion de materiales</summary><div class='fields'>${field('Separacion de postes, pies', 'spacingFt', order.spacingFt, true, false, true, String(result.spacingFt))}${field('Rieles por seccion', 'railCount', order.railCount, true, false, true, String(result.railCount))}${field('Tornillos por plank', 'screwsPerPlank', order.screwsPerPlank, true, false, true, String(result.screwsPerPlank))}</div></details>`, 'La tarifa se aplica a todos los pies contratados. Las aberturas solo reducen los materiales de cerca.');
-    const runs = card('Tramos de cerca', order.runs.map((run, index) => box('Tramo ' + (index + 1),
-      field('Nombre del tramo', `runs.${index}.name`, run.name) + field('Longitud total, pies', `runs.${index}.lengthFt`, run.lengthFt, true)
-      + field('Punto inicial', `runs.${index}.startNode`, run.startNode) + field('Punto final', `runs.${index}.endNode`, run.endNode), 'remove-run', index)).join('') + button('add-run', 'Agregar tramo'),
-      'Usa el mismo nombre de punto en los extremos que comparten un poste. Ejemplo: frente P1-P2 y lateral P2-P3.');
-    const gates = card('3. Gates', order.gates.map((gate, index) => box('Gate ' + (index + 1),
-      select('Tipo', `gates.${index}.kind`, gate.kind, [['plank','Gate revestido con planks'],['aluminum','Custom aluminium gate']])
-      + select('Ubicacion', `gates.${index}.runId`, gate.runId, [['','Independiente del proyecto'], ...order.runs.map((run): [string,string] => [run.id, run.name])])
-      + field('Ancho de abertura, pies', `gates.${index}.widthFt`, gate.widthFt, true)
+    const customer = card('2. Cliente y proyecto', `<div class='fields'>${field('Cliente / empresa', 'customer.name', order.customer.name)}${field('Telefono', 'customer.phone', order.customer.phone)}${field('Email del cliente', 'customer.email', order.customer.email)}${field('Direccion del proyecto', 'customer.address', order.customer.address)}</div>`);
+    const dims = card('3. Precio del acuerdo', `<div class='fields'>${select('Paquete', 'packageId', order.packageId, [['standard','Standard'],['premium','Premium']])}${select('Servicio', 'labor', order.labor, [['installed','Instalacion'],['materials','Solo materiales']])}${field('Precio negociado por pie, USD', 'rateCents', order.rateCents, true, true, true, String(result.rateCents / 100))}</div>${button('reset-rate', 'Usar precio del paquete')}<details><summary>Altura, postes y materiales</summary><div class='fields'>${field('Altura de los paneles, pies', 'heightFt', order.heightFt, true)}${field('Profundidad del poste, pies', 'embedFt', order.embedFt, true)}${field('Separacion de postes, pies', 'spacingFt', order.spacingFt, true, false, true, String(result.spacingFt))}${field('Rieles por seccion', 'railCount', order.railCount, true, false, true, String(result.railCount))}${field('Tornillos por plank', 'screwsPerPlank', order.screwsPerPlank, true, false, true, String(result.screwsPerPlank))}</div></details>`, 'La tarifa se aplica a todos los pies contratados. Un gate no resta esos pies.');
+    const footage = footageOf(order);
+    const multiRun = order.runs.length > 1;
+    const widthChoices = (index: number, selected: number) => gateWidthChoices.map((width) =>
+      `<button class='choice ${selected === width ? 'is-selected' : ''}' type='button' data-action='gate-width' data-index='${index}' data-width='${width}'>${width} ft</button>`).join('');
+    const gateCards = order.gates.map((gate, index) => box('Gate ' + (index + 1),
+      `<div class='choice-row' role='group' aria-label='Ancho del gate ${index + 1}'>${widthChoices(index, gate.widthFt)}</div>`
+      + (gate.widthFt > 0 ? '' : `<p class='dash-muted'>Elige el ancho. No hay un gate de 6 ft por defecto.</p>`)
+      + select('Tipo', `gates.${index}.kind`, gate.kind, [['plank','Gate revestido con planks'],['aluminum','Custom aluminium gate']])
+      + select('Ubicacion', `gates.${index}.runId`, gate.runId, [['','Independiente de la cerca'], ...order.runs.map((run): [string,string] => [run.id, run.name])])
+      + field('Ancho de abertura, pies', `gates.${index}.widthFt`, gate.widthFt > 0 ? gate.widthFt : '', true)
       + field('Altura del gate, pies', `gates.${index}.heightFt`, gate.heightFt, true)
       + field('Distancia desde inicio del tramo, pies', `gates.${index}.offsetFt`, gate.offsetFt, true)
       + field('Precio del gate, USD', `gates.${index}.priceCents`, gate.priceCents, true, true)
       + check('Incluido en el acuerdo', `gates.${index}.included`, gate.included)
       + check('Postes propios separados', `gates.${index}.separatePosts`, gate.separatePosts)
       + check('Reforzar postes del gate', `gates.${index}.reinforced`, gate.reinforced)
-      + button('gate-price', 'Cargar precio de catalogo', 'data-index=' + index), 'remove-gate', index)).join('')
-      + button('add-gate', 'Agregar gate'), 'Un gate incluido conserva sus materiales y muestra Included en el invoice. Los aluminium gates no agregan planks.');
-    const cameras = card('Camaras', `<div class='fields'>${field('Camaras incluidas', 'cameras.included', order.cameras.included, true)}${field('Camaras adicionales cobradas', 'cameras.extra', order.cameras.extra, true)}${field('Precio de cada camara adicional, USD', 'cameras.unitCents', order.cameras.unitCents, true, true, true, 'Introduce el precio acordado')}</div>`);
+      + button('gate-price', 'Cargar precio de catalogo', 'data-index=' + index), 'remove-gate', index)).join('');
+    const runCards = order.runs.map((run, index) => box('Tramo ' + (index + 1),
+      field('Nombre del tramo', `runs.${index}.name`, run.name) + field('Pies de este tramo', `runs.${index}.lengthFt`, run.lengthFt, true)
+      + field('Punto inicial', `runs.${index}.startNode`, run.startNode) + field('Punto final', `runs.${index}.endNode`, run.endNode), 'remove-run', index)).join('');
+    const job = card('1. Trabajo del cliente', `<div class='job-board'>
+      <div class='job-tile job-tile-wide'><span class='job-kicker'>Pies de cerca</span><input class='footage-input' data-footage inputmode='decimal' type='number' min='0' step='0.01' placeholder='Ej. 200' aria-label='Pies de cerca contratados' value='${multiRun ? esc(footage) : footage > 0 ? esc(footage) : ''}' ${multiRun ? 'readonly' : ''} /><p class='dash-muted'>${multiRun ? 'Hay varios tramos. Edita los pies de cada uno abajo. El total no cambia desde aqui.' : 'Escribe los pies contratados. Un solo numero basta. Los gates no los reducen.'}</p></div>
+      <div class='job-tile'><span class='job-kicker'>Gates</span>${stepper('gate-count', order.gates.length, 'Quitar un gate', 'Agregar un gate')}<p class='dash-muted'>${order.gates.length ? order.gates.length + ' gate' + (order.gates.length === 1 ? '' : 's') + '. Elige el ancho de cada uno.' : 'Sin gates. Dejalo en cero si el cliente no quiere ninguno.'}</p></div>
+      <div class='job-tile'><span class='job-kicker'>Camaras incluidas</span>${stepper('camera-count', order.cameras.included, 'Quitar una camara incluida', 'Agregar una camara incluida')}<div class='choice-row'>${[0,1,2].map((count) => `<button class='choice ${order.cameras.included === count ? 'is-selected' : ''}' type='button' data-action='camera-count' data-count='${count}'>${count}</button>`).join('')}</div><p class='dash-muted'>Por ejemplo: cero gates y dos camaras.</p></div>
+      </div>${gateCards}<details ${multiRun ? 'open' : ''}><summary>Tramos, camaras extra y esquinas</summary>${runCards}${button('add-run', 'Agregar tramo')}<div class='fields extra-cameras'>${field('Camaras adicionales cobradas', 'cameras.extra', order.cameras.extra, true)}${field('Precio de cada camara adicional, USD', 'cameras.unitCents', order.cameras.unitCents, true, true, true, 'Precio acordado')}</div><p class='dash-muted'>Usa el mismo nombre de punto en los extremos que comparten un poste. Si hay dos gates en un tramo, indica la distancia del segundo.</p></details>`,
+      'Empieza por los pies, luego cuantos gates y cuantas camaras. Nada de eso viene elegido por ti.');
     const items = card('Productos y servicios adicionales', order.items.map((item, index) => box('Partida ' + (index + 1),
       field('Descripcion para el cliente', `items.${index}.description`, item.description)
       + field('Cantidad', `items.${index}.quantity`, item.quantity, true)
@@ -84,7 +96,8 @@ export function mountDashboard(): void {
       `<div class='material-row ${Object.hasOwn(order.overrides,key) ? 'modified' : ''}' data-material='${key}'><label>${materialNames[key]}<small data-auto='${key}'>Calculado: ${result.automatic[key]}</small></label><input aria-label='${materialNames[key]}' type='number' min=0 step='${key === 'railFeet' ? '0.01' : '1'}' data-path='overrides.${key}' data-optional placeholder='${result.automatic[key]}' value='${order.overrides[key] ?? ''}' />${button('reset-material', 'Automatico', 'data-key=' + key)}</div>`).join(''),
       'Estas cantidades estan dentro del paquete. Para cobrar extras, agrega una partida. Los valores corregidos se mantienen hasta pulsar Automatico.');
     const pricing = card('4. Importes y condiciones', `<div class='fields'>${select('Descuento', 'discount.kind', order.discount.kind, [['amount','Importe USD'],['percent','Porcentaje']])}${field('Valor del descuento', 'discount.value', order.discount.value, true, order.discount.kind === 'amount')}${field('Concepto del cargo', 'charge.label', order.charge.label)}${field('Cargo, porcentaje', 'charge.percent', order.charge.percent, true)}${select('Deposito', 'deposit.kind', order.deposit.kind, [['percent','Porcentaje del total'],['amount','Importe USD']])}${field('Valor del deposito', 'deposit.value', order.deposit.value, true, order.deposit.kind === 'amount')}<label class='wide'>Condiciones para el cliente<textarea data-path='terms' maxlength=4000>${esc(order.terms)}</textarea></label><label class='wide'>Notas internas, no aparecen en el PDF<textarea data-path='internalNotes' maxlength=4000>${esc(order.internalNotes)}</textarea></label></div>`);
-    node('[data-editor]').innerHTML = `<fieldset ${historical ? 'disabled' : ''}>${customer + dims + runs + gates + cameras + items + materials + pricing}</fieldset>`;
+    node('[data-editor]').innerHTML = `<fieldset ${historical ? 'disabled' : ''}>${job + customer + dims + items + materials + pricing}</fieldset>`;
+    if (focus) root.querySelector<HTMLInputElement>(focus)?.focus();
     const paymentForm = node<HTMLFormElement>('[data-payment-form]');
     paymentForm.hidden = historical || saved?.kind !== 'invoice';
     paymentForm.querySelector<HTMLInputElement>('input[name=date]')!.value ||= new Date().toISOString().slice(0,10);
@@ -104,6 +117,15 @@ export function mountDashboard(): void {
       + row('Total', money(result.totalCents), true) + row('Deposito acordado', money(result.depositCents))
       + row('Pagos recibidos', money(result.paidCents)) + row('Saldo pendiente', money(result.balanceCents));
     node('[data-issues]').innerHTML = result.issues.map((issue) => '<li>' + esc(issue) + '</li>').join('');
+    const feetLabel = root.querySelector('[data-tablet-feet]');
+    const totalLabel = root.querySelector('[data-tablet-total]');
+    if (feetLabel) feetLabel.textContent = footageOf(order) + ' ft · ' + order.gates.length + ' gates · ' + order.cameras.included + ' camaras';
+    if (totalLabel) totalLabel.textContent = money(result.totalCents);
+    const footageInput = root.querySelector<HTMLInputElement>('[data-footage]');
+    if (footageInput && document.activeElement !== footageInput) {
+      const shown = footageOf(order);
+      footageInput.value = shown > 0 || order.runs.length > 1 ? String(shown) : '';
+    }
     for (const key of Object.keys(materialNames) as MaterialKey[]) {
       const target = root!.querySelector<HTMLElement>('[data-auto=' + key + ']');
       if (target) target.textContent = 'Calculado: ' + result.automatic[key] + (Object.hasOwn(order.overrides,key) ? ' / modificado' : '');
@@ -233,8 +255,23 @@ export function mountDashboard(): void {
       const startNode = order.runs.at(-1)?.endNode ?? 'P' + n++;
       while(used.has('P' + n) || 'P' + n === startNode) n += 1;
       order.runs.push({id:crypto.randomUUID(),name:'Tramo ' + (order.runs.length + 1),lengthFt:0,startNode,endNode:'P' + n});
-    } else if (action === 'add-gate') order.gates.push({id:crypto.randomUUID(),kind:'plank',widthFt:12,heightFt:order.heightFt,runId:order.runs[0]?.id ?? '',offsetFt:0,included:true,priceCents:100000,separatePosts:false,reinforced:false});
-    else if (action === 'add-item') order.items.push({id:crypto.randomUUID(),description:'',quantity:1,unit:'unit',unitCents:0,included:false});
+    } else if (action === 'gate-count' || action === 'add-gate') {
+      const absolute = target.dataset.count;
+      setGateCount(order, absolute !== undefined ? Number(absolute) : order.gates.length + Number(target.dataset.delta || 1));
+    } else if (action === 'camera-count') {
+      const absolute = target.dataset.count;
+      setIncludedCameras(order, absolute !== undefined ? Number(absolute) : order.cameras.included + Number(target.dataset.delta || 0));
+    } else if (action === 'gate-width') {
+      const gate = order.gates[index];
+      if (!gate) return;
+      gate.widthFt = Number(target.dataset.width);
+      const price = gateDefault(gate.widthFt, gate.kind, order.labor);
+      if (price !== null) gate.priceCents = price;
+      if (order.runs.length === 1 && gate.widthFt > 0 && gate.widthFt <= order.runs[0].lengthFt) {
+        gate.runId = order.runs[0].id;
+        if (gate.offsetFt + gate.widthFt > order.runs[0].lengthFt) gate.offsetFt = 0;
+      }
+    } else if (action === 'add-item') order.items.push({id:crypto.randomUUID(),description:'',quantity:1,unit:'unit',unitCents:0,included:false});
     else if (action === 'remove-run') {
       const [removed] = order.runs.splice(index,1);
       order.gates.filter((gate) => gate.runId === removed.id).forEach((gate) => {gate.runId='';gate.offsetFt=0;});
@@ -280,7 +317,16 @@ export function mountDashboard(): void {
   node('[data-editor]').addEventListener('input',(event) => {
     if (historical || busy) return;
     const target=event.target as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
-    const path=target.dataset.path; if(!path) return;
+    const path=target.dataset.path;
+    if (target instanceof HTMLInputElement && target.hasAttribute('data-footage')) {
+      const before = order.runs.length;
+      setFootage(order, target.value === '' ? 0 : Number(target.value));
+      dirty = true;
+      if (order.runs.length !== before || order.runs.length > 1) render('[data-footage]');
+      else updateSummary();
+      return;
+    }
+    if(!path) return;
     const parts=path.split('.'); let parent=order as unknown as Record<string,unknown>;
     for(const part of parts.slice(0,-1)) parent=parent[part] as Record<string,unknown>;
     const key=parts.at(-1)!;
@@ -293,8 +339,14 @@ export function mountDashboard(): void {
     if(path.startsWith('overrides.') && value===null) delete parent[key]; else parent[key]=value;
     if(path==='discount.kind') order.discount.value=0;
     if(path==='deposit.kind') order.deposit.value=order.deposit.kind==='percent'?25:0;
+    if(/^gates\.\d+\.(widthFt|kind)$/.test(path)) {
+      const gate = order.gates[Number(parts[1])];
+      const price = gate ? gateDefault(gate.widthFt, gate.kind, order.labor) : null;
+      if (gate && price !== null) gate.priceCents = price;
+      if (gate && order.runs.length === 1 && gate.widthFt > 0 && gate.widthFt <= order.runs[0].lengthFt && !gate.runId) gate.runId = order.runs[0].id;
+    }
     dirty=true;
-    if(path==='discount.kind'||path==='deposit.kind'||path==='packageId'||path==='labor') render(); else updateSummary();
+    if(path==='discount.kind'||path==='deposit.kind'||path==='packageId'||path==='labor'||/^gates\.\d+\.kind$/.test(path)) render(); else updateSummary();
   });
   node<HTMLInputElement>('[data-search]').addEventListener('input',(event) => {
     query=(event.target as HTMLInputElement).value; clearTimeout(searchTimer);

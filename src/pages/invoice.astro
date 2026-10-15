@@ -28,15 +28,10 @@ import Monogram from '../components/Monogram.astro';
     </header>
     <main id='invoice-dashboard'>
       <div class='dash-title'>
-        <div><p class='kicker'>Administraci&oacute;n de ventas</p><h1>Un acuerdo. Todos los detalles.</h1><p class='dash-muted'>Configura cada proyecto, revisa los materiales y prepara el documento para tu cliente.</p></div>
+        <div><p class='kicker'>Administraci&oacute;n de ventas</p><h1>Acuerdo en la tablet.</h1><p class='dash-muted'>Pies de cerca, cantidad de gates y c&aacute;maras. Cero gates es v&aacute;lido.</p></div>
         <button class='btn-steel' type='button' data-action='new'>Nuevo estimado</button>
       </div>
       <div class='dash-notice' data-status role='status' aria-live='polite'>Cargando historial...</div>
-      <section class='dash-card history-card' aria-labelledby='history-title'>
-        <div class='section-head'><h2 id='history-title'>Historial compartido</h2><label class='search-label'>Buscar cliente<input type='search' data-search placeholder='Nombre del cliente' autocomplete='off' /></label></div>
-        <div class='table-scroll'><table><thead><tr><th>Documento</th><th>Cliente</th><th>Fecha</th><th>Total</th><th>Saldo</th><th></th></tr></thead><tbody data-documents></tbody></table></div>
-        <button class='small-button' type='button' data-action='more' hidden>Ver m&aacute;s</button>
-      </section>
       <section id='editor' class='dashboard-grid' aria-label='Editor del documento'>
         <div class='editor-column'>
           <div class='editor-toolbar'><div><p class='kicker' data-kind>Estimado</p><h2 data-number>Nuevo documento</h2><p class='dash-muted' data-version>Sin guardar</p></div><button class='small-button' type='button' data-action='duplicate'>Crear copia</button></div>
@@ -67,6 +62,15 @@ import Monogram from '../components/Monogram.astro';
           <section class='dash-card pdf-card'><h2>Vista previa del documento</h2><p class='dash-muted' data-preview-status>Completa el proyecto para generar la vista previa.</p><iframe data-preview title='Vista previa del PDF para el cliente' hidden></iframe></section>
         </aside>
       </section>
+      <section class='dash-card history-card' aria-labelledby='history-title'>
+        <div class='section-head'><h2 id='history-title'>Historial compartido</h2><label class='search-label'>Buscar cliente<input type='search' data-search placeholder='Nombre del cliente' autocomplete='off' /></label></div>
+        <div class='table-scroll'><table><thead><tr><th>Documento</th><th>Cliente</th><th>Fecha</th><th>Total</th><th>Saldo</th><th></th></tr></thead><tbody data-documents></tbody></table></div>
+        <button class='small-button' type='button' data-action='more' hidden>Ver m&aacute;s</button>
+      </section>
+      <div class='tablet-bar' data-tablet-bar>
+        <div><span data-tablet-feet>0 ft · 0 gates · 0 camaras</span><strong data-tablet-total>$0.00</strong></div>
+        <button class='btn-steel' type='button' data-action='save'>Guardar</button>
+      </div>
     </main>
     <script>
       import { mountDashboard } from '../invoice/dashboard';
