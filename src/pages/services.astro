@@ -1,14 +1,17 @@
 ---
 import Base from '../layouts/Base.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
 import { catalogImageSrc } from '../data/catalog-presentation';
 import CatalogImage from '../components/CatalogImage.astro';
 import CatalogCredit from '../components/CatalogCredit.astro';
 import ProductSpecs from '../components/ProductSpecs.astro';
 import { fence, gallery } from '../data/catalog';
 import { fencePackages, packageSpec } from '../data/estimate';
+const breadcrumbs = [{ name: 'Home', href: '/' }, { name: 'Fences', href: '/services/' }];
 ---
-<Base title="Metal Privacy Fences in South Georgia | Dura Fence Metal" description="Metal privacy fencing by the linear foot in South Georgia. Explore 4–8 ft heights, white and bronze finishes, plus Standard and Premium estimates.">
+<Base breadcrumbs={breadcrumbs} title="Metal Privacy Fences in South Georgia | Dura Fence Metal" description="Metal privacy fencing by the linear foot in South Georgia. Explore 4–8 ft heights, white and bronze finishes, plus Standard and Premium estimates.">
   <header class="frame page-open !pb-10">
+    <Breadcrumbs items={breadcrumbs} />
     <p class="kicker">Privacy for your property</p>
     <h1 class="page-title">Metal privacy fences</h1>
     <p class="lede">A coordinated system of metal planks, posts and rails for residential yards and commercial perimeters. Choose the look of your fence and plan every gate opening as part of the same project.</p>
@@ -70,6 +73,7 @@ import { fencePackages, packageSpec } from '../data/estimate';
         <h2 id="planning-title" class="text-3xl font-semibold">Plan the fence and the openings together</h2>
         <p class="lede">Bring the total length, desired height and finish, and the width of each gate opening. Include corners, changes in slope and existing sections that need to be matched.</p>
         <a class="link-quiet mt-6 inline-block" href="/quote/">Request a project quote</a>
+        <p class="mt-4 text-muted">Check our <a class="link-quiet" href="/service-area/">South Georgia service area</a> and contact us to confirm arrangements for your property.</p>
       </div>
       <div class="space-y-6">
         <div><h3 class="text-xl font-semibold">Access that matches</h3><p class="mt-2 text-muted">Compare <a class="link-quiet" href="/gates/">pedestrian and double swing gates</a> before deciding where to place the openings.</p></div>

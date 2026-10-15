@@ -7,7 +7,7 @@ export default defineConfig({
   trailingSlash: 'always',
   integrations: [
     sitemap({
-      filter: (page) => !/\/404\/?$/.test(page),
+      filter: (page) => !/\/(404|invoice)\/?$/.test(new URL(page).pathname),
     }),
   ],
   vite: {
@@ -21,3 +21,4 @@ export default defineConfig({
     },
   },
 });
+

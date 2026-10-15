@@ -1,13 +1,17 @@
 ---
 import Base from '../layouts/Base.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
 import { site } from '../data/site';
+const breadcrumbs = [{ name: 'Home', href: '/' }, { name: 'Service area', href: '/service-area/' }];
 ---
 
 <Base
+  breadcrumbs={breadcrumbs}
   title="Service Area in South Georgia | Dura Fence Metal"
   description="Dura Fence Metal installs metal fences and gates across South Georgia, including Valdosta, Tifton, Moultrie, Thomasville, Waycross, and nearby towns."
 >
   <header class="frame page-open">
+    <Breadcrumbs items={breadcrumbs} />
     <p class="kicker">Dura Fence Metal</p>
     <h1 class="page-title">Service area in South Georgia</h1>
     <p class="lede">
@@ -23,4 +27,13 @@ import { site } from '../data/site';
       <a class="btn-steel" href="/quote/">Request a quote</a>
     </p>
   </header>
+  <section class="border-t border-line" aria-labelledby="coverage-title">
+    <div class="frame">
+      <h2 id="coverage-title" class="text-3xl font-semibold">Plan a project in our service area</h2>
+      <p class="lede">Explore <a class="link-quiet" href="/services/">metal privacy fences</a>, matching <a class="link-quiet" href="/gates/">pedestrian and driveway gates</a>, or <a class="link-quiet" href="/parts/">individual fence components</a>. The estimator offers materials only and installed options.</p>
+      <h3 class="mt-8 text-xl font-semibold">Confirm your location and project details</h3>
+      <p class="mt-3 max-w-prose text-muted">Send your town, fence length, height and gate openings with your request. We will confirm arrangements for your property. If your town is not listed, contact us before making plans for materials or installation.</p>
+      <p class="mt-6"><a class="link-quiet" href="/estimate/">Build a fence estimate</a> before requesting a project quote.</p>
+    </div>
+  </section>
 </Base>

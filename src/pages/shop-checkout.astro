@@ -1,0 +1,130 @@
+---
+import Base from '../layouts/Base.astro';
+import { checkoutCatalog, US_STATES } from '../data/shop-checkout.ts';
+import { formatReceiptMoney } from '../data/estimate.ts';
+---
+
+<Base title="Request a Fence Estimate | Dura Fence Metal" description="Choose catalog products and receive an estimated PDF by email. Contact our sales team to arrange a site measurement and an in-person purchase." noindex>
+  <section class="frame checkout" aria-labelledby="checkout-title">
+    <div class="intro">
+      <p class="kicker">Dura Fence Metal · Facebook Shop</p>
+      <h1 id="checkout-title">Your fence starts here.</h1>
+      <p class="lede">Review your selection and tell us about your project. We’ll email your estimate. To purchase, contact our sales team; installation projects require an on-site estimate. Payment is arranged in person.</p>
+    </div>
+    <form id="shop-checkout" novalidate>
+      <div class="checkout-layout">
+        <div class="steps">
+          <fieldset class="panel">
+            <legend>01 &nbsp; Your estimate</legend>
+            <p id="cart-import-notice" class="notice" role="status" hidden></p>
+            <label for="product">Catalog product</label>
+            <select class="field-input" id="product" name="product" aria-describedby="error-product">
+              <option value="">Choose a product</option>
+              {checkoutCatalog.map((item) => <option value={item.sku}>{item.name} — {formatReceiptMoney(item.unitCents)}{item.kind === 'fence' ? '/ft' : ' each'}</option>)}
+              <option value="gates-only">Gates only / no fence package</option>
+            </select>
+            <p id="error-product" class="error" data-error="product" hidden></p>
+            <div id="fence-length" hidden>
+              <label for="lengthFt">Estimated linear feet</label>
+              <input class="field-input" id="lengthFt" name="lengthFt" type="number" inputmode="decimal" min="0.01" max="5000" step="0.01" aria-describedby="length-help error-lengthFt" />
+              <p class="help" id="length-help">Measure the fence run in feet. We confirm the final measurements before installation.</p>
+              <p id="error-lengthFt" class="error" data-error="lengthFt" hidden></p>
+            </div>
+            <div id="package-notes" class="package-notes" hidden></div>
+            <div id="additional-fences"></div>
+            <button id="add-fence" class="btn-steel" type="button">Add another fence package</button>
+            <h2>Additional gates</h2>
+            <p class="help">Each fence package includes one 12 ft gate. Enter only additional openings below.</p>
+            {checkoutCatalog.filter((item) => item.kind === 'gate').map((item) => item.kind === 'gate' && <div class="gate-row">
+              <label for={item.gateId}>{item.name}<span>{formatReceiptMoney(item.unitCents)} each</span></label>
+              <div><input class="field-input" id={item.gateId} name={item.gateId} type="number" inputmode="numeric" min="0" max="99" step="1" value="0" aria-describedby={`error-${item.gateId}`} /><p id={`error-${item.gateId}`} class="error" data-error={item.gateId} hidden></p></div>
+            </div>)}
+          </fieldset>
+          <fieldset class="panel">
+            <legend>02 &nbsp; Estimate pricing</legend>
+            <label for="payment">Planned in-person payment method</label>
+            <select class="field-input" id="payment" name="payment"><option value="cash">Cash</option><option value="card">Card</option></select>
+            <p class="help">For this estimate, card adds 7% tax and cash does not. This selection calculates estimated pricing only. Contact sales to arrange an in-person payment.</p>
+            <label for="discountCode">Discount code <span class="help">(optional)</span></label>
+            <input class="field-input" id="discountCode" name="discountCode" maxlength="12" autocomplete="off" spellcheck="false" aria-describedby="error-discountCode" />
+            <p id="error-discountCode" class="error" data-error="discountCode" hidden></p>
+          </fieldset>
+          <fieldset class="panel">
+            <legend>03 &nbsp; Your project details</legend>
+            <div class="customer-grid">
+              {[
+                { name: 'name', label: 'Full name', autocomplete: 'name', type: 'text', max: 100 },
+                { name: 'email', label: 'Email for your PDF', autocomplete: 'email', type: 'email', max: 120 },
+                { name: 'phone', label: 'Phone', autocomplete: 'tel', type: 'tel', max: 40 },
+                { name: 'street', label: 'Project street address', autocomplete: 'street-address', type: 'text', max: 200 },
+                { name: 'city', label: 'City', autocomplete: 'address-level2', type: 'text', max: 80 },
+              ].map((field) => <div class:list={{ 'full-width': field.name === 'street' }}>
+                <label for={field.name}>{field.label}</label>
+                <input class="field-input" id={field.name} name={field.name} type={field.type} autocomplete={field.autocomplete} maxlength={field.max} required aria-describedby={`error-${field.name}`} />
+                <p id={`error-${field.name}`} class="error" data-error={field.name} hidden></p>
+              </div>)}
+              <div><label for="state">State</label><select class="field-input" id="state" name="state" autocomplete="address-level1" required aria-describedby="error-state"><option value="">Choose state</option>{US_STATES.map((state) => <option value={state}>{state}</option>)}</select><p id="error-state" class="error" data-error="state" hidden></p></div>
+              <div><label for="zip">ZIP code</label><input class="field-input" id="zip" name="zip" autocomplete="postal-code" inputmode="numeric" maxlength="10" required aria-describedby="error-zip" /><p id="error-zip" class="error" data-error="zip" hidden></p></div>
+            </div>
+          </fieldset>
+        </div>
+        <aside class="panel summary" aria-labelledby="summary-title">
+          <h2 id="summary-title">Your project estimate</h2>
+          <div id="order-lines"><p class="help">Choose products for your estimate.</p></div>
+          <dl id="order-totals" aria-live="polite" aria-atomic="true"></dl>
+          <p class="notice">This request is for an estimate. To purchase, contact our sales team. Installation requires an on-site estimate before the final price is confirmed.</p>
+          <p class="help">The PDF goes to your email, with a copy to Dura Fence Metal. The estimated 25% deposit is shown for planning; contact sales to arrange payment in person.</p>
+          <div class="honeypot" aria-hidden="true"><label for="df_leave_blank">Leave this blank</label><input id="df_leave_blank" name="df_leave_blank" tabindex="-1" autocomplete="off" /></div>
+          <button class="btn-steel" id="checkout-submit" type="submit" disabled>Email my estimate</button>
+          <p id="checkout-status" role="status" aria-live="polite" tabindex="-1"></p>
+          <p class="help">By submitting, you ask us to contact you about this project. <a class="link-quiet" href="/privacy/">Privacy policy</a></p>
+          <noscript><p>Please enable JavaScript to calculate your order, or contact <a href="mailto:info@durafencemetal.com">info@durafencemetal.com</a>.</p></noscript>
+        </aside>
+      </div>
+    </form>
+  </section>
+</Base>
+
+<script>
+  import '../scripts/shop-checkout.ts';
+</script>
+
+<style>
+  .checkout { padding-block: calc(var(--header-h) + 3rem) 5rem; }
+  .intro { max-width: 48rem; margin-bottom: 2.5rem; }
+  h1 { font-size: clamp(2rem, 5vw, 3.5rem); line-height: 1.1; margin: 1rem 0; }
+  .checkout-layout { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 1.5rem; align-items: start; }
+  .steps { display: grid; gap: 1.5rem; min-width: 0; }
+  .panel { min-width: 0; border: 1px solid #44413b; border-radius: 12px; padding: 1.5rem; background: #131313; }
+  legend { padding-inline: .5rem; color: #deb987; font-size: 1.2rem; font-weight: 600; }
+  label { display: block; margin-block: 1rem .5rem; font-weight: 500; }
+  .field-input { width: 100%; min-height: 48px; font-size: 1rem; }
+  h2 { margin-block: 1.5rem .75rem; font-size: 1.35rem; font-weight: 600; }
+  .summary h2 { margin-top: 0; }
+  .help { color: #b8b8b8; font-size: .95rem; margin-block: .5rem; line-height: 1.5; }
+  .gate-row { display: grid; grid-template-columns: minmax(0, 1fr) 6rem; gap: 1rem; align-items: center; border-top: 1px solid #393939; padding-block: .65rem; }
+  .gate-row label { margin: 0; }
+  .gate-row span { display: block; color: #b8b8b8; font-size: .9rem; }
+  #additional-fences :global(.additional-fence-row) { border-top: 1px solid #393939; padding-block: 1rem; margin-top: 1rem; }
+  #additional-fences :global(label) { display: block; margin-block: 1rem .5rem; }
+  #additional-fences :global(.error) { color: #ffc2b8; font-size: .95rem; margin-top: .5rem; }
+  #additional-fences :global(button), #add-fence { margin-top: 1rem; white-space: normal; }
+  .customer-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem 1rem; }
+  .full-width { grid-column: 1 / -1; }
+  .error { color: #ffc2b8; font-size: .95rem; margin-top: .5rem; }
+  [aria-invalid="true"] { border-color: #ffc2b8; }
+  .package-notes, .notice { margin-block: 1rem; padding: 1rem; background: #252019; border-left: 3px solid #c59b64; line-height: 1.5; }
+  .summary { position: sticky; top: calc(var(--header-h) + 1.5rem); }
+  .summary :global(.order-line) { padding-block: 1rem; border-bottom: 1px solid #393939; overflow-wrap: anywhere; }
+  .summary :global(.order-line small) { display: block; color: #b8b8b8; margin-top: .35rem; }
+  .summary :global(.total-row) { display: flex; justify-content: space-between; gap: 1rem; padding-block: .5rem; }
+  .summary :global(.total-row strong) { color: #deb987; }
+  .summary :global(dd) { margin: 0; white-space: nowrap; }
+  #order-totals { margin-block: 1rem; }
+  #checkout-submit { width: 100%; margin-top: 1rem; min-height: 48px; white-space: normal; }
+  #checkout-submit:disabled { opacity: .6; cursor: wait; }
+  #checkout-status { margin-top: 1rem; }
+  .honeypot { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  @media (max-width: 800px) { .checkout-layout { grid-template-columns: 1fr; } .summary { position: static; } }
+  @media (max-width: 420px) { .panel { padding: 1rem; } .customer-grid { grid-template-columns: 1fr; } }
+</style>

@@ -1,11 +1,23 @@
 ---
 import Base from '../layouts/Base.astro';
 import EstimateSheet from '../components/EstimateSheet.astro';
+const breadcrumbs = [{ name: 'Home', href: '/' }, { name: 'Fence cost estimator', href: '/estimate/' }];
 ---
 
 <Base
-  title="Fence Materials and Price in South Georgia | Dura Fence Metal"
-  description="Price a Dura Fence Metal package in South Georgia. Premium or standard, installed or materials only, with pickets, posts, rails, screws, and gates."
+  breadcrumbs={breadcrumbs}
+  title="Metal Fence Cost Estimator in South Georgia | Dura Fence Metal"
+  description="Estimate metal privacy fence costs in South Georgia. Compare Standard and Premium, materials or installation, add gates, and view an itemized estimate."
 >
-  <EstimateSheet />
+  <EstimateSheet breadcrumbs={breadcrumbs} />
+  <section class="border-t border-line print:hidden" aria-labelledby="estimate-help-title">
+    <div class="frame">
+      <h2 id="estimate-help-title" class="text-3xl font-semibold">Plan your fence estimate</h2>
+      <p class="lede">Measure the fence run in feet and plan each gate opening. Compare <a class="link-quiet" href="/services/#packages">Standard and Premium packages</a> and review <a class="link-quiet" href="/gates/">gate sizes and configurations</a> before entering your selections.</p>
+      <h3 class="mt-8 text-xl font-semibold">Review the itemized order</h3>
+      <p class="mt-3 max-w-prose text-muted">The estimator updates quantities and prices as you change your selections. Choose installation or materials only, then review the order and payment details. Print or save the estimate, or enter your contact details to email the PDF.</p>
+      <h3 class="mt-8 text-xl font-semibold">Confirm the project with us</h3>
+      <p class="mt-3 max-w-prose text-muted">Check our <a class="link-quiet" href="/service-area/">South Georgia service area</a> and contact us to confirm arrangements for your property. For <a class="link-quiet" href="/parts/">individual parts</a> or configurations outside the estimator, <a class="link-quiet" href="/quote/">request a separate quote</a>.</p>
+    </div>
+  </section>
 </Base>

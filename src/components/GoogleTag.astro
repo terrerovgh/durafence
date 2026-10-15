@@ -1,14 +1,30 @@
 ---
-const measurementId = (import.meta.env.PUBLIC_GA_MEASUREMENT_ID ?? 'G-1Y94FEZF3D').trim();
+// Preserve the existing business ID and legacy override. An explicit empty ID disables GA4.
+const measurementId = (import.meta.env.PUBLIC_GA4_MEASUREMENT_ID ?? import.meta.env.PUBLIC_GA_MEASUREMENT_ID ?? 'G-1Y94FEZF3D').trim();
 if (measurementId && !/^G-[A-Z0-9]+$/.test(measurementId)) {
-  throw new Error('PUBLIC_GA_MEASUREMENT_ID must be a GA4 measurement ID like G-XXXXXXXX.');
+  throw new Error('PUBLIC_GA4_MEASUREMENT_ID must be a GA4 measurement ID like G-XXXXXXXX.');
 }
 // Classic script, not an Astro module. gtag.js calls the global gtag function.
 const config = `window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}
 gtag('js', new Date());
 
-gtag('config', '${measurementId}');`;
+gtag('config', '${measurementId}', {
+  page_location: '${new URL(Astro.url.pathname, Astro.site).href}',
+  page_referrer: document.referrer.split(/[?#]/)[0],
+  allow_google_signals: false,
+  allow_ad_personalization_signals: false
+});
+for (const name of ['estimate_start', 'estimate_complete', 'quote_submit']) {
+  document.addEventListener('dura-fence:' + name, function() {
+    gtag('event', name, {send_to: '${measurementId}'});
+  });
+}
+document.addEventListener('click', function(event) {
+  if (event.target instanceof Element && event.target.closest('a[href^="tel:"]')) {
+    gtag('event', 'phone_click', {send_to: '${measurementId}'});
+  }
+});`;
 ---
 
 {measurementId && (

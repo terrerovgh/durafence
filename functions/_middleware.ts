@@ -20,6 +20,11 @@ export async function onRequest(context: MiddlewareContext): Promise<Response> {
   const method = context.request.method;
   let redirect = false;
 
+  if (url.hostname === CANONICAL_HOST && url.protocol !== 'https:' && (url.pathname === '/shop-checkout' || url.pathname === '/shop-checkout/' || url.pathname === '/api/shop-checkout')) {
+    url.protocol = 'https:';
+    return Response.redirect(url.toString(), 308);
+  }
+
   if (url.hostname === `www.${CANONICAL_HOST}`) {
     url.hostname = CANONICAL_HOST;
     url.protocol = 'https:';
@@ -32,5 +37,8 @@ export async function onRequest(context: MiddlewareContext): Promise<Response> {
   }
 
   if (redirect) return Response.redirect(url.toString(), 301);
+  if (url.pathname === '/shop-checkout/' && method === 'GET') {
+    console.log(JSON.stringify({ event: 'shop_checkout_arrival', query: url.search }));
+  }
   return context.next();
 }

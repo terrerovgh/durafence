@@ -1,4 +1,5 @@
 import { ESTIMATE_STORAGE_KEY } from '../data/estimate';
+import { trackSeoEvent } from './analytics';
 
 const propertyLabels: Record<string, string> = {
   residential: 'Residential',
@@ -183,6 +184,7 @@ export function mountQuoteForm(): void {
         const body = (await response.json().catch(() => null)) as { ok?: boolean } | null;
         if (body?.ok) {
           document.dispatchEvent(new Event('dura-fence:lead'));
+          trackSeoEvent('quote_submit');
           if (status) status.textContent = 'Request sent. A measurement comes before a price.';
           form.querySelectorAll<HTMLElement>('input, select, textarea, button').forEach((field) => {
             if (field !== copyButton) field.setAttribute('disabled', '');

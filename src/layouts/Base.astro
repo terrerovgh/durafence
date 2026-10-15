@@ -8,6 +8,7 @@ import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import GoogleTag from '../components/GoogleTag.astro';
 import MetaPixel from '../components/MetaPixel.astro';
+import type { BreadcrumbItem } from '../components/Breadcrumbs.astro';
 import { schemaPhone, site, siteUrl } from '../data/site';
 import { trades } from '../data/services';
 
@@ -15,9 +16,10 @@ interface Props {
   title: string;
   description: string;
   noindex?: boolean;
+  breadcrumbs?: BreadcrumbItem[];
 }
 
-const { title, description, noindex = false } = Astro.props;
+const { title, description, noindex = false, breadcrumbs = [] } = Astro.props;
 const origin = (Astro.site ?? new URL(siteUrl)).toString().replace(/\/$/, '');
 const path = Astro.url.pathname.endsWith('/') ? Astro.url.pathname : `${Astro.url.pathname}/`;
 const canonical = new URL(path, `${origin}/`).toString();
@@ -85,7 +87,16 @@ const graph = {
       about: { '@id': businessId },
       inLanguage: 'en-US',
       primaryImageOfPage: { '@type': 'ImageObject', url: image, width: 1200, height: 630 },
+      ...(breadcrumbs.length > 1 ? { breadcrumb: { '@id': `${canonical}#breadcrumb` } } : {}),
     },
+    ...(breadcrumbs.length > 1 ? [{
+      '@type': 'BreadcrumbList',
+      '@id': `${canonical}#breadcrumb`,
+      itemListElement: breadcrumbs.map((item, index) => ({
+        '@type': 'ListItem', position: index + 1, name: item.name,
+        item: new URL(item.href, `${origin}/`).toString(),
+      })),
+    }] : []),
   ],
 };
 

@@ -3,11 +3,27 @@
   "name": "durafence",
   "compatibility_date": "2026-09-25",
   "main": "./worker/index.ts",
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
+  },
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",
     "not_found_handling": "404-page",
     "html_handling": "auto-trailing-slash",
     "run_worker_first": true
+  },
+  "d1_databases": [
+    {
+      "binding": "INVOICE_DB",
+      "database_name": "durafence-invoices",
+      "database_id": "cb404974-0c88-4da1-b799-164421bc7271",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "vars": {
+    "INVOICE_ACCESS_ISSUER": "https://terrerov.cloudflareaccess.com",
+    "INVOICE_ACCESS_AUD": "71654abaf71951ce0b2eaffb0b9bc42feec42464c8e44ffe23beee995e717f43"
   }
 }

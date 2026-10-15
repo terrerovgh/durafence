@@ -1,12 +1,15 @@
 ---
 import Base from '../layouts/Base.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
 import CatalogImage from '../components/CatalogImage.astro';
 import CatalogCredit from '../components/CatalogCredit.astro';
 import ProductSpecs from '../components/ProductSpecs.astro';
 import { parts } from '../data/catalog';
+const breadcrumbs = [{ name: 'Home', href: '/' }, { name: 'Parts', href: '/parts/' }];
 ---
-<Base title="Planks, Parts & Hardware in South Georgia | Dura Fence Metal" description="Metal fence planks, square posts, rails and self-tapping screws for privacy fences in South Georgia. Compare sizes and finishes, then request what you need.">
+<Base breadcrumbs={breadcrumbs} title="Planks, Parts & Hardware in South Georgia | Dura Fence Metal" description="Metal fence planks, square posts, rails and self-tapping screws for privacy fences in South Georgia. Compare sizes and finishes, then request what you need.">
   <header class="frame page-open !pb-10">
+    <Breadcrumbs items={breadcrumbs} />
     <p class="kicker">Build the complete fence</p>
     <h1 class="page-title">Planks, parts & hardware</h1>
     <p class="lede">Plan a new fence or match the pieces you need for an existing one. Find dimensions, finish options and hardware for the privacy fence system.</p>
@@ -33,6 +36,7 @@ import { parts } from '../data/catalog';
       <h2 class="text-2xl font-semibold">Ordering a complete fence?</h2>
       <p class="lede">Use our estimator for Standard and Premium fence packages, additional gates and extra screws. Individual parts are quoted on request.</p>
       <a class="btn-steel mt-6" href="/estimate/">Build your estimate</a>
+      <p class="mt-6 max-w-prose text-muted">Compare <a class="link-quiet" href="/services/">complete fence packages</a> and <a class="link-quiet" href="/gates/">matching gates</a>, then confirm arrangements in our <a class="link-quiet" href="/service-area/">South Georgia service area</a>.</p>
     </div>
   </section>
 </Base>

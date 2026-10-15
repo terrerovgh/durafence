@@ -1,12 +1,14 @@
+import { handleInvoiceArea, isInvoiceArea, type InvoiceEnv } from './invoice-api.ts';
 import { estimateCopies, onRequestPost as onEstimateEmail } from '../functions/api/estimate-email.ts';
 import { onRequestGet as onEstimateAddress } from '../functions/api/estimate-address.ts';
 import { onRequestPost } from '../functions/api/quote.ts';
 import { invoiceAddress } from '../src/data/estimate-mail.ts';
 import { contactAddress, contactInboxes } from '../src/data/site.ts';
+import { onRequestPost as onShopCheckout } from '../functions/api/shop-checkout.ts';
 
 const CANONICAL_HOST = 'durafencemetal.com';
 
-interface Env {
+interface Env extends InvoiceEnv {
   ASSETS: Fetcher;
   RESEND_API_KEY?: string;
   RESENT_API_KEY?: string;
@@ -68,8 +70,14 @@ export default {
 
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
+    if (isInvoiceArea(url.pathname)) return handleInvoiceArea(request, env);
     const method = request.method;
     let redirect = false;
+
+    if (url.hostname === CANONICAL_HOST && url.protocol !== 'https:' && (url.pathname === '/shop-checkout' || url.pathname === '/shop-checkout/' || url.pathname === '/api/shop-checkout')) {
+      url.protocol = 'https:';
+      return Response.redirect(url.toString(), 308);
+    }
 
     if (url.hostname === `www.${CANONICAL_HOST}`) {
       url.hostname = CANONICAL_HOST;
@@ -83,6 +91,14 @@ export default {
     }
 
     if (redirect) return Response.redirect(url.toString(), 301);
+
+    if (url.pathname === '/shop-checkout/' && method === 'GET') {
+      console.log(JSON.stringify({ event: 'shop_checkout_arrival', query: url.search }));
+    }
+    if (url.pathname === '/api/shop-checkout') {
+      if (method === 'POST') return onShopCheckout({ request, env });
+      return new Response('Method not allowed', { status: 405, headers: { allow: 'POST', 'cache-control': 'no-store' } });
+    }
 
     if (url.pathname === '/api/quote' && method === 'POST') {
       return onRequestPost({ request, env });
@@ -109,3 +125,4 @@ export default {
     });
   },
 };
+

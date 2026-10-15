@@ -1,0 +1,77 @@
+---
+import '../styles/global.css';
+import '../invoice/dashboard.css';
+import '@fontsource/barlow/latin-400.css';
+import '@fontsource/barlow/latin-500.css';
+import '@fontsource/barlow/latin-600.css';
+import '@fontsource/michroma/latin-400.css';
+import Monogram from '../components/Monogram.astro';
+---
+<!doctype html>
+<html lang='es'>
+  <head>
+    <meta charset='UTF-8' />
+    <meta name='viewport' content='width=device-width, initial-scale=1.0' />
+    <meta name='robots' content='noindex, nofollow' />
+    <meta name='referrer' content='no-referrer' />
+    <title>Invoices | Dura Fence Metal</title>
+    <link rel='icon' href='/favicon.svg' />
+  </head>
+  <body>
+    <a class='skip' href='#editor'>Ir al editor</a>
+    <header class='dash-header'>
+      <a href='/' aria-label='Dura Fence Metal, inicio' class='dash-brand'>
+        <Monogram idPrefix='dashboard' crop class='dash-logo' />
+        <span>Dura Fence Metal <small>Estimados e invoices</small></span>
+      </a>
+      <a class='link-quiet' href='/cdn-cgi/access/logout'>Cerrar sesi&oacute;n</a>
+    </header>
+    <main id='invoice-dashboard'>
+      <div class='dash-title'>
+        <div><p class='kicker'>Administraci&oacute;n de ventas</p><h1>Un acuerdo. Todos los detalles.</h1><p class='dash-muted'>Configura cada proyecto, revisa los materiales y prepara el documento para tu cliente.</p></div>
+        <button class='btn-steel' type='button' data-action='new'>Nuevo estimado</button>
+      </div>
+      <div class='dash-notice' data-status role='status' aria-live='polite'>Cargando historial...</div>
+      <section class='dash-card history-card' aria-labelledby='history-title'>
+        <div class='section-head'><h2 id='history-title'>Historial compartido</h2><label class='search-label'>Buscar cliente<input type='search' data-search placeholder='Nombre del cliente' autocomplete='off' /></label></div>
+        <div class='table-scroll'><table><thead><tr><th>Documento</th><th>Cliente</th><th>Fecha</th><th>Total</th><th>Saldo</th><th></th></tr></thead><tbody data-documents></tbody></table></div>
+        <button class='small-button' type='button' data-action='more' hidden>Ver m&aacute;s</button>
+      </section>
+      <section id='editor' class='dashboard-grid' aria-label='Editor del documento'>
+        <div class='editor-column'>
+          <div class='editor-toolbar'><div><p class='kicker' data-kind>Estimado</p><h2 data-number>Nuevo documento</h2><p class='dash-muted' data-version>Sin guardar</p></div><button class='small-button' type='button' data-action='duplicate'>Crear copia</button></div>
+          <form data-editor autocomplete='off'></form>
+          <section class='dash-card' aria-labelledby='payments-title'><h2 id='payments-title'>Pagos recibidos</h2><div data-payments></div>
+            <form data-payment-form class='payment-form'>
+              <label>Importe en USD<input name='amount' type='number' min='0.01' step='0.01' required /></label>
+              <label>Fecha<input name='date' type='date' required /></label>
+              <label>M&eacute;todo<input name='method' placeholder='Cash, card, transferencia...' maxlength='40' required /></label>
+              <label>Nota<input name='note' maxlength='500' /></label>
+              <button class='small-button' type='submit'>Registrar pago</button>
+            </form>
+            <p class='dash-muted'>Registro manual. Este dashboard no cobra tarjetas.</p>
+          </section>
+          <section class='dash-card'><h2>Revisiones</h2><div data-revisions><p class='dash-muted'>Guarda el documento para ver sus revisiones.</p></div></section>
+        </div>
+        <aside class='preview-column' aria-label='Resumen y documento'>
+          <section class='dash-card summary-card'><h2>Resumen del acuerdo</h2><div data-summary aria-live='polite'></div><ul class='dash-errors' data-issues></ul>
+            <div class='action-grid'>
+              <button class='btn-steel' type='button' data-action='save'>Guardar cambios</button>
+              <button class='small-button' type='button' data-action='convert'>Cliente acept&oacute;: convertir en invoice</button>
+              <button class='small-button' type='button' data-action='download'>Descargar PDF</button>
+              <button class='small-button' type='button' data-action='print'>Imprimir PDF</button>
+              <button class='small-button' type='button' data-action='send'>Enviar PDF al cliente</button>
+            </div>
+            <p class='dash-muted' data-save-note>Los precios negociados se aplican solo a este documento.</p>
+          </section>
+          <section class='dash-card pdf-card'><h2>Vista previa del documento</h2><p class='dash-muted' data-preview-status>Completa el proyecto para generar la vista previa.</p><iframe data-preview title='Vista previa del PDF para el cliente' hidden></iframe></section>
+        </aside>
+      </section>
+    </main>
+    <script>
+      import { mountDashboard } from '../invoice/dashboard';
+      mountDashboard();
+    </script>
+  </body>
+</html>
+

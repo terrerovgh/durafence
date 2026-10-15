@@ -1,5 +1,6 @@
 ---
 import Monogram from './Monogram.astro';
+import Breadcrumbs, { type BreadcrumbItem } from './Breadcrumbs.astro';
 import { site } from '../data/site';
 import {
   aluminumRate,
@@ -13,9 +14,10 @@ import {
 
 interface Props {
   placed?: 'page' | 'home';
+  breadcrumbs?: BreadcrumbItem[];
 }
 
-const { placed = 'page' } = Astro.props;
+const { placed = 'page', breadcrumbs = [] } = Astro.props;
 const home = placed === 'home';
 const packages = [fencePackages.premium, fencePackages.standard];
 const aluminumNote = `${formatMoney(aluminumRate.installed * 100)} a foot installed, or ${formatMoney(aluminumRate.materials * 100)} for materials only. Each gate includes posts every ${aluminumRate.postSpacingFt} ft and a closure.`;
@@ -24,13 +26,14 @@ const aluminumNote = `${formatMoney(aluminumRate.installed * 100)} a foot instal
 <div data-estimate>
   <div class:list={['frame', { 'page-open': !home }]}>
     <header>
+      {breadcrumbs.length > 1 && <Breadcrumbs items={breadcrumbs} />}
       <p class="kicker">The package</p>
       {home ? (
         <h2 id="price-heading" class="mt-3 max-w-[16ch] text-3xl font-semibold tracking-tight sm:text-4xl">Materials and price</h2>
       ) : (
-        <h1 class="page-title">Materials and price</h1>
+        <h1 class="page-title">Metal fence cost estimator</h1>
       )}
-      <p class="lede">Enter the run and the height, then choose the package. One bay is drawn to those rules. The order is the sheet beside it.</p>
+      <p class="lede">Enter the fence length in feet and the height, then choose Standard or Premium and installed or materials only. Add gates and extra screws to see an itemized estimate and a drawing of one fence bay.</p>
     </header>
 
     <div class="mt-10 grid items-start gap-12 lg:grid-cols-[minmax(0,1.15fr)_minmax(17.5rem,24rem)] lg:gap-14">
@@ -131,7 +134,7 @@ const aluminumNote = `${formatMoney(aluminumRate.installed * 100)} a foot instal
                     <span class="mt-1 block text-sm text-muted">{formatMoney(gate.price * 100)}</span>
                   </span>
                   <span class="flex items-center gap-1">
-                    <button class="inline-flex h-11 w-11 items-center justify-center text-xl text-gold" type="button" data-step={gate.id} data-dir="-1" aria-label={`Remove a ${gate.name}`}>−</button>
+                    <button class="inline-flex h-11 w-11 items-center justify-center text-xl text-gold" type="button" data-step={gate.id} data-dir="-1" aria-label={`Remove a ${gate.name}`}>&#8722;</button>
                     <span class="min-w-6 text-center tabular-nums" data-count={gate.id}>0</span>
                     <button class="inline-flex h-11 w-11 items-center justify-center text-xl text-gold" type="button" data-step={gate.id} data-dir="1" aria-label={`Add a ${gate.name}`}>+</button>
                   </span>
@@ -888,7 +891,7 @@ const aluminumNote = `${formatMoney(aluminumRate.installed * 100)} a foot instal
 
     @page {
       size: letter;
-      margin: 0;
+      margin: 0.5in;
       background: #fff;
     }
   }

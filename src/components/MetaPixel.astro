@@ -26,6 +26,12 @@ if (pixelId && !/^\d{5,20}$/.test(pixelId)) {
       document.addEventListener('dura-fence:lead', function() {
         fbq('trackSingle', pixelId, 'Lead');
       });
+      document.addEventListener('dura-fence:commerce', function(event) {
+        var detail = event.detail;
+        if (detail && ['ViewContent', 'Lead'].includes(detail.name)) {
+          fbq('trackSingle', pixelId, detail.name, detail.data);
+        }
+      });
     </script>
     <!-- End Meta Pixel Code -->
   </>

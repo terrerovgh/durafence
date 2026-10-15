@@ -23,6 +23,7 @@ import {
 } from '../data/estimate';
 import { bayFromEstimate, drawBay } from './fence-drawing';
 import { customerErrors, type EstimateCustomer } from '../data/estimate-mail';
+import { createEstimateTracker } from './analytics';
 
 function readDecimal(raw: string): number {
   const trimmed = raw.trim();
@@ -675,19 +676,22 @@ export function mountEstimate(): void {
   if (!form || !list || !template) return;
 
   let latest = priceEstimate(readInput(root));
+  const observeEstimate = createEstimateTracker();
 
-  const update = () => {
+  const update = (userEdit = false) => {
     latest = priceEstimate(readInput(root));
     render(root, latest);
     syncAluminumLimit(root);
+    if (userEdit) observeEstimate(!latest.empty && latest.issues.length === 0
+      && !readHeight(root).error && !applyDiscount(latest.totalCents, discountCode(root)).error);
   };
 
   form.addEventListener('submit', (event) => event.preventDefault());
   mountAddressAutocomplete(root);
-  form.addEventListener('input', update);
-  form.addEventListener('change', update);
-  root.querySelector('[data-pay-card]')?.addEventListener('change', update);
-  root.querySelector('[data-discount-code]')?.addEventListener('input', update);
+  form.addEventListener('input', (event) => update(event.isTrusted));
+  form.addEventListener('change', (event) => update(event.isTrusted));
+  root.querySelector('[data-pay-card]')?.addEventListener('change', (event) => update(event.isTrusted));
+  root.querySelector('[data-discount-code]')?.addEventListener('input', (event) => update(event.isTrusted));
   root.querySelector('[data-print-invoice]')?.addEventListener('click', () => window.print());
   root.querySelector('[data-email-invoice]')?.addEventListener('click', () => {
     void emailEstimate(root, latest);
@@ -712,7 +716,7 @@ export function mountEstimate(): void {
       const next = Math.min(maxGateQty, Math.max(0, Math.round(readDecimal(hidden?.value ?? '0')) + dir));
       if (hidden) hidden.value = String(next);
       if (shown) shown.textContent = String(next);
-      update();
+      update(true);
       return;
     }
 
@@ -720,7 +724,7 @@ export function mountEstimate(): void {
       if (list.querySelectorAll('[data-aluminum-row]').length >= maxAluminumGates) return;
       const row = addAluminumRow(list, template);
       row?.querySelector<HTMLInputElement>('[data-aluminum-width]')?.focus();
-      update();
+      update(true);
       return;
     }
 
@@ -728,7 +732,7 @@ export function mountEstimate(): void {
     if (remove) {
       remove.closest('[data-aluminum-row]')?.remove();
       root.querySelector<HTMLButtonElement>('[data-add-aluminum]')?.focus();
-      update();
+      update(true);
     }
   });
 
