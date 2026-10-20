@@ -21,7 +21,7 @@ export function invoicePdfInput(invoice: StoredInvoice): OnePageInput {
     heading('Runs / gate dimensions'),
     ...order.runs.map((run, i) => text('Run ' + (i + 1) + ' (' + run.name + '): ' + run.lengthFt + ' ft.')),
     ...(order.gates.length ? order.gates.map((gate, i) => text('Gate ' + (i + 1) + ': ' + (gate.kind === 'plank' ? 'Plank' : 'Custom aluminum') +
-      ', ' + gate.widthFt + ' ft wide x ' + gate.heightFt + ' ft high; ' +
+      ', ' + gate.widthFt + ' ft wide x ' + gate.heightFt + ' ft high' + (gate.double ? ', double (2 x ' + gate.widthFt / 2 + ' ft leaves)' : ', single leaf') + '; ' +
       (gate.runId ? 'run ' + (order.runs.findIndex((run) => run.id === gate.runId) + 1) + ' at ' + gate.offsetFt + ' ft' : 'standalone') + '; ' +
       (gate.separatePosts ? 'separate posts' : gate.runId ? 'shared posts' : 'own posts') + (gate.reinforced ? ', reinforced.' : '.')))
       : [text('No gates specified.')]),

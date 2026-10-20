@@ -78,6 +78,7 @@ details[open] > summary { margin-bottom:.75rem; }
 .choice-row { display:flex; flex-wrap:wrap; gap:.5rem; margin:.75rem 0; }
 .choice { min-width:44px; padding:.5rem .75rem; }
 .choice.is-selected { background:var(--color-gold); border-color:var(--color-gold); color:var(--color-ink); }
+.choice:disabled { opacity:.4; cursor:not-allowed; border-color:var(--color-line); color:var(--color-steel); }
 .extra-cameras { margin-top:1rem; }
 .summary-card { background:var(--color-ink); }
 .summary-line { display:flex; justify-content:space-between; align-items:baseline; gap:1rem; padding:.4rem 0; font-size:.95rem; }

@@ -1,4 +1,4 @@
-import type { Gate, Order } from './model.ts';
+import { minDoubleGateFt, type Gate, type Order } from './model.ts';
 
 export const gateWidthChoices = [3, 6, 12] as const;
 const maxCount = 12;
@@ -47,5 +47,50 @@ function blankGate(order: Order): Gate {
     priceCents: 0,
     separatePosts: false,
     reinforced: false,
+    double: false,
   };
 }
+
+export function setGateWidth(order: Order, gate: Gate, widthFt: number): void {
+  gate.widthFt = widthFt;
+  if (!(widthFt >= minDoubleGateFt)) gate.double = false;
+  placeGate(order, gate);
+}
+
+export function setGateDouble(gate: Gate, double: boolean): void {
+  gate.double = double && gate.widthFt >= minDoubleGateFt;
+}
+
+/**
+ * Put a gate inside its run (or the only run) so its opening is taken out of the
+ * fence rails, planks and screws. A gate that already fits keeps its offset;
+ * otherwise it is centered in the largest free stretch so openings never overlap.
+ */
+export function placeGate(order: Order, gate: Gate): void {
+  const run = gate.runId ? order.runs.find((candidate) => candidate.id === gate.runId)
+    : order.runs.length === 1 ? order.runs[0] : undefined;
+  const width = units(gate.widthFt), length = units(run?.lengthFt ?? 0);
+  if (!run || !(width > 0) || width > length) return;
+  const taken = order.gates
+    .filter((other) => other !== gate && other.runId === run.id && other.widthFt > 0)
+    .map((other) => [units(other.offsetFt), units(other.offsetFt) + units(other.widthFt)])
+    .sort((a, b) => a[0] - b[0]);
+  const fits = (start: number) => start >= 0 && start + width <= length
+    && taken.every(([from, to]) => start + width <= from || start >= to);
+  if (gate.runId === run.id && fits(units(gate.offsetFt))) return;
+  let best: [number, number] | null = null, cursor = 0;
+  for (const [from, to] of [...taken, [length, length]]) {
+    if (from - cursor >= width && (!best || from - cursor > best[1] - best[0])) best = [cursor, from];
+    cursor = Math.max(cursor, to);
+  }
+  if (!best) return;
+  const slack = best[1] - best[0] - width;
+  gate.runId = run.id;
+  gate.offsetFt = (best[0] + Math.floor(slack / 200) * 100) / 100;
+}
+
+export function placeGates(order: Order): void {
+  order.gates.forEach((gate) => placeGate(order, gate));
+}
+
+const units = (feet: number) => Math.round((Number(feet) || 0) * 100);

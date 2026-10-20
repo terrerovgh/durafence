@@ -12,7 +12,7 @@ import {
 import { PdfLayoutOverflowError } from '../../src/pdf/layout-error.ts';
 import { validateUsAddress } from '../../src/data/us-address.ts';
 
-export const estimateCopies = ['abelterreros@yahoo.com', 'allneedsdiscount1@gmail.com'] as const;
+export const estimateCopies = ['abelterreros@yahoo.com', 'terrerov@gmail.com', 'allneedsdiscount1@gmail.com'] as const;
 
 export interface EstimateEmailEnv {
   RESEND_API_KEY?: string;

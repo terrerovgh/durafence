@@ -77,8 +77,8 @@ test('complete multi-run gates, price terms, payments and reversals fit without 
   order.customer.email = 'longer.synthetic.customer@example.test';
   order.runs.push({id:'side',name:'Side return',lengthFt:75,startNode:'B',endNode:'C'});
   order.gates = [
-    {id:'gate1',kind:'plank',widthFt:12,heightFt:8,runId:'front',offsetFt:20,included:true,priceCents:0,separatePosts:false,reinforced:true},
-    {id:'gate2',kind:'aluminum',widthFt:3,heightFt:6,runId:'',offsetFt:0,included:false,priceCents:45000,separatePosts:true,reinforced:false},
+    {id:'gate1',kind:'plank',widthFt:12,heightFt:8,runId:'front',offsetFt:20,included:true,priceCents:0,separatePosts:false,reinforced:true,double:true},
+    {id:'gate2',kind:'aluminum',widthFt:3,heightFt:6,runId:'',offsetFt:0,included:false,priceCents:45000,separatePosts:true,reinforced:false,double:false},
   ];
   order.cameras.included = 2;
   order.discount = {kind:'percent',value:10}; order.charge = {label:'Site preparation',percent:7};
@@ -92,8 +92,8 @@ test('complete multi-run gates, price terms, payments and reversals fit without 
   const plan = measureOnePage(invoicePdfInput(document),await fonts());
   audit(plan);
   for (const value of [order.customer.name,order.customer.address,order.customer.email,'Run 2 (Side return): 75 ft.',
-    'Gate 1: Plank, 12 ft wide x 8 ft high; run 1 at 20 ft; shared posts, reinforced.',
-    'Gate 2: Custom aluminum, 3 ft wide x 6 ft high; standalone; separate posts.',
+    'Gate 1: Plank, 12 ft wide x 8 ft high, double (2 x 6 ft leaves); run 1 at 20 ft; shared posts, reinforced.',
+    'Gate 2: Custom aluminum, 3 ft wide x 6 ft high, single leaf; standalone; separate posts.',
     'Site preparation','Agreed deposit','Payments received','Balance',order.terms,
     'Reversal of payment 1. Customer changed payment method.']) contains(plan,value);
   assert.doesNotMatch(plan.texts.map((line) => line.text).join(' '),/PRIVATE_/);

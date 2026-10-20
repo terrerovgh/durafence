@@ -8,7 +8,7 @@ function sample(): Order {
 }
 function gate(overrides: Partial<Gate> = {}): Gate {
   return { id:'gate', kind:'plank', widthFt:12, heightFt:6, runId:'front', offsetFt:100, included:true,
-    priceCents:100000, separatePosts:false, reinforced:false, ...overrides };
+    priceCents:100000, separatePosts:false, reinforced:false, double:false, ...overrides };
 }
 test('200 ft Standard at negotiated 30 USD has no mandatory gate and accepts two included cameras', () => {
   const order=sample(); order.cameras.included=2;
@@ -86,3 +86,29 @@ test('normalization refuses non-finite values, fractional counts, unsupported en
   assert.ok(issuanceIssues(order).length);
 });
 
+test('two 12 ft gates in one run each take their opening out of rails, planks and screws', () => {
+  const order=sample(); order.gates=[gate({offsetFt:40}),gate({id:'second',offsetFt:140})];
+  const result=calculate(order);
+  assert.deepEqual(result.issues,[]);
+  assert.equal(result.openingFt,24); assert.equal(result.netFt,176);
+  assert.equal(result.materials.railFeet,352); assert.equal(result.materials.fencePlanks,352);
+  assert.equal(result.materials.gatePlanks,48); assert.equal(result.materials.screws,(352+48)*2);
+  // Each gate opening has its own hinge and latch posts at both ends.
+  assert.equal(result.materials.posts,33);
+});
+test('a double gate keeps the opening, posts, planks and price of a single gate of the same width', () => {
+  const order=sample(); order.gates=[gate()];
+  const single=calculate(order);
+  order.gates=[gate({double:true})];
+  const double=calculate(order);
+  assert.deepEqual(double.materials,single.materials); assert.equal(double.totalCents,single.totalCents);
+  assert.equal(double.lines.find((line) => line.unit==='gate')?.description,'Plank gate 12 ft, double (2 x 6 ft leaves)');
+});
+test('documents saved before double gates load as single gates', () => {
+  const order=sample(); order.gates=[gate()];
+  const legacy=structuredClone(order) as unknown as { gates: Record<string, unknown>[] };
+  delete legacy.gates[0].double;
+  assert.equal(normalizeOrder(legacy).gates[0].double,false);
+  assert.equal(normalizeOrder({...order,gates:[gate({double:true})]}).gates[0].double,true);
+  assert.throws(() => normalizeOrder({...order,gates:[{...gate(),double:'yes'}]}));
+});

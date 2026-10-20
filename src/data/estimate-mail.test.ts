@@ -154,7 +154,7 @@ describe('POST /api/estimate-email with Resend', () => {
 
   it('does not copy an address that is already the customer', async (t) => {
     t.mock.method(globalThis, 'fetch', async (_url, options) => {
-      assert.deepEqual(JSON.parse(options.body).bcc, ['allneedsdiscount1@gmail.com']);
+      assert.deepEqual(JSON.parse(options.body).bcc, ['terrerov@gmail.com', 'allneedsdiscount1@gmail.com']);
       return Response.json({ id: 'test-message' });
     });
     const body = requestBody();

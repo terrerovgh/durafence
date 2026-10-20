@@ -5,6 +5,8 @@ export type Gate = {
   id: string; kind: 'plank' | 'aluminum'; widthFt: number; heightFt: number;
   runId: string; offsetFt: number; included: boolean; priceCents: number;
   separatePosts: boolean; reinforced: boolean;
+  /** Two leaves sharing the opening, e.g. a 12 ft gate built as two 6 ft leaves. */
+  double: boolean;
 };
 export type Item = { id: string; description: string; quantity: number; unit: string; unitCents: number; included: boolean };
 export type Payment = { id: string; amountCents: number; date: string; method: string; note: string; reverses?: string };
@@ -47,6 +49,9 @@ export function newOrder(): Order {
     internalNotes: '',
   };
 }
+
+/** A double gate needs two leaves of at least 3 ft each. */
+export const minDoubleGateFt = 6;
 
 export function gateDefault(widthFt: number, kind: Gate['kind'], labor: Labor): number | null {
   if (kind === 'aluminum') return Math.round(widthFt * aluminumRate[labor] * 100);
@@ -108,6 +113,8 @@ export function normalizeOrder(input: unknown): Order {
       runId: readText(gate.runId, 64), offsetFt: num(gate.offsetFt), included: flag(gate.included),
       priceCents: num(gate.priceCents, 100_000_000, true),
       separatePosts: flag(gate.separatePosts), reinforced: flag(gate.reinforced),
+      // Documents saved before double gates existed are single-leaf gates.
+      double: gate.double === undefined ? false : flag(gate.double),
     })),
     items: list(source.items).map((item) => ({ id: readText(item.id, 64),
       description: readText(item.description, 300), quantity: num(item.quantity, 100_000),
@@ -216,7 +223,8 @@ export function calculate(order: Order, payments: Payment[] = []): Calculation {
     quantity: feet(gross), unit: 'ft', unitCents: rateCents,
     amountCents: Math.round(gross * rateCents / 100), included: false,
   });
-  for (const gate of order.gates) lines.push({ description: (gate.kind === 'plank' ? 'Plank gate' : 'Custom aluminium gate') + ' ' + gate.widthFt + ' ft',
+  for (const gate of order.gates) lines.push({ description: (gate.kind === 'plank' ? 'Plank gate' : 'Custom aluminium gate') + ' ' + gate.widthFt + ' ft'
+    + (gate.double ? ', double (2 x ' + gate.widthFt / 2 + ' ft leaves)' : ''),
     quantity: 1, unit: 'gate', unitCents: gate.priceCents, amountCents: gate.included ? 0 : gate.priceCents, included: gate.included });
   if (order.cameras.included > 0) lines.push({ description: 'Ringbell camera', quantity: order.cameras.included, unit: 'camera', unitCents: 0, amountCents: 0, included: true });
   if (order.cameras.extra > 0) lines.push({ description: 'Additional Ringbell camera', quantity: order.cameras.extra, unit: 'camera',

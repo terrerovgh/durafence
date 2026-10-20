@@ -1,5 +1,5 @@
-import { newOrder, calculate, gateDefault, money, type Order, type StoredInvoice, type MaterialKey } from './model.ts';
-import { footageOf, gateWidthChoices, setFootage, setGateCount, setIncludedCameras } from './job-setup.ts';
+import { newOrder, calculate, gateDefault, minDoubleGateFt, money, type Order, type StoredInvoice, type MaterialKey } from './model.ts';
+import { footageOf, gateWidthChoices, placeGate, placeGates, setFootage, setGateCount, setGateDouble, setGateWidth, setIncludedCameras } from './job-setup.ts';
 import { PDF_OVERFLOW_EN } from '../pdf/layout-error.ts';
 const esc = (value: unknown) => String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/'/g, '&#39;');
 const percent = String.fromCharCode(37);
@@ -142,6 +142,7 @@ export function editFootage(order: Order, input: Pick<FootageInput, 'value'>, re
   const before = order.runs.length;
   setFootage(order, input.value === '' ? 0 : Number(input.value));
   if (before === 0 && order.runs.length === 1) order.runs[0].name = 'Fence';
+  placeGates(order);
   refresh(order.runs.length !== before);
   return true;
 }
@@ -162,6 +163,23 @@ export function syncFootageInputs(order: Order, primary: FootageInput | null,
       const value = String(order.runs[index].lengthFt);
       if (input.value !== value) input.value = value;
     }
+  });
+}
+
+type GateInputs = { runId: Pick<HTMLSelectElement, 'value'> | null; offset: Pick<HTMLInputElement, 'value'> | null };
+
+/** Show where each gate was placed without re-rendering the input being typed in. */
+export function leafNote(gate: Order['gates'][number]): string {
+  if (gate.double) return 'Double gate: two ' + gate.widthFt / 2 + ' ft leaves meeting at the center.';
+  return gate.widthFt >= minDoubleGateFt ? 'Single gate: one ' + gate.widthFt + ' ft leaf.' : 'Double gates start at ' + minDoubleGateFt + ' ft.';
+}
+
+export function syncGateInputs(order: Order, gates: readonly GateInputs[], active: unknown): void {
+  gates.forEach(({ runId, offset }, index) => {
+    const gate = order.gates[index];
+    if (!gate) return;
+    if (runId && runId !== active && runId.value !== gate.runId) runId.value = gate.runId;
+    if (offset && offset !== active && offset.value !== String(gate.offsetFt)) offset.value = String(gate.offsetFt);
   });
 }
 
@@ -241,9 +259,13 @@ export function mountDashboard(): void {
     const multiRun = order.runs.length > 1;
     const widthChoices = (index: number, selected: number) => gateWidthChoices.map((width) =>
       `<button class='choice ${selected === width ? 'is-selected' : ''}' type='button' data-action='gate-width' data-index='${index}' data-width='${width}'>${width} ft</button>`).join('');
+    const leafChoices = (index: number, gate: Order['gates'][number]) => ([[false, 'Single'], [true, 'Double']] as const).map(([double, text]) =>
+      `<button class='choice ${gate.double === double ? 'is-selected' : ''}' type='button' data-action='gate-double' data-index='${index}' data-double='${double}' ${double && gate.widthFt < minDoubleGateFt ? 'disabled' : ''}>${text}</button>`).join('');
     const gateCards = order.gates.map((gate, index) => box('Gate ' + (index + 1),
       `<div class='choice-row' role='group' aria-label='Gate width ${index + 1}'>${widthChoices(index, gate.widthFt)}</div>`
       + (gate.widthFt > 0 ? '' : `<p class='dash-muted'>Select a width for this gate.</p>`)
+      + `<div class='choice-row' role='group' aria-label='Gate ${index + 1} leaves'>${leafChoices(index, gate)}</div>`
+      + `<p class='dash-muted' data-gate-leaves='${index}'>${esc(leafNote(gate))}</p>`
       + select('Type', `gates.${index}.kind`, gate.kind, [['plank','Plank gate'],['aluminum','Custom aluminum gate']])
       + select('Location', `gates.${index}.runId`, gate.runId, [['','Standalone gate'], ...order.runs.map((run): [string,string] => [run.id, run.name])])
       + field('Opening width, ft', `gates.${index}.widthFt`, gate.widthFt > 0 ? gate.widthFt : '', true)
@@ -295,6 +317,22 @@ export function mountDashboard(): void {
       const target = root.querySelector('[data-job-' + key + ']');
       if (target) target.textContent = value;
     }
+    syncGateInputs(order, order.gates.map((_, index) => ({
+      runId: root.querySelector<HTMLSelectElement>("[data-path='gates." + index + ".runId']"),
+      offset: root.querySelector<HTMLInputElement>("[data-path='gates." + index + ".offsetFt']"),
+    })), document.activeElement);
+    // A typed width can enable or clear the double option without re-rendering the active input.
+    order.gates.forEach((gate, index) => {
+      root.querySelectorAll<HTMLButtonElement>("[data-action=gate-double][data-index='" + index + "']").forEach((choice) => {
+        const double = choice.dataset.double === 'true';
+        choice.classList.toggle('is-selected', gate.double === double);
+        if (double) choice.disabled = gate.widthFt < minDoubleGateFt;
+      });
+      root.querySelectorAll<HTMLButtonElement>("[data-action=gate-width][data-index='" + index + "']").forEach((choice) =>
+        choice.classList.toggle('is-selected', Number(choice.dataset.width) === gate.widthFt));
+      const note = root.querySelector("[data-gate-leaves='" + index + "']");
+      if (note) note.textContent = leafNote(gate);
+    });
     syncFootageInputs(order, root.querySelector<HTMLInputElement>('[data-footage]'),
       order.runs.map((_, index) => root.querySelector<HTMLInputElement>("[data-path='runs." + index + ".lengthFt']")),
       document.activeElement);
@@ -436,17 +474,18 @@ export function mountDashboard(): void {
     } else if (action === 'gate-width') {
       const gate = order.gates[index];
       if (!gate) return;
-      gate.widthFt = Number(target.dataset.width);
+      setGateWidth(order, gate, Number(target.dataset.width));
       const price = gateDefault(gate.widthFt, gate.kind, order.labor);
       if (price !== null) gate.priceCents = price;
-      if (order.runs.length === 1 && gate.widthFt > 0 && gate.widthFt <= order.runs[0].lengthFt) {
-        gate.runId = order.runs[0].id;
-        if (gate.offsetFt + gate.widthFt > order.runs[0].lengthFt) gate.offsetFt = 0;
-      }
+    } else if (action === 'gate-double') {
+      const gate = order.gates[index];
+      if (!gate) return;
+      setGateDouble(gate, target.dataset.double === 'true');
     } else if (action === 'add-item') order.items.push({id:crypto.randomUUID(),description:'',quantity:1,unit:'unit',unitCents:0,included:false});
     else if (action === 'remove-run') {
       const [removed] = order.runs.splice(index,1);
       order.gates.filter((gate) => gate.runId === removed.id).forEach((gate) => {gate.runId='';gate.offsetFt=0;});
+      placeGates(order);
     } else if (action === 'remove-gate') order.gates.splice(index,1);
     else if (action === 'remove-item') order.items.splice(index,1);
     else if (action === 'reset-rate') order.rateCents = null;
@@ -529,11 +568,13 @@ export function mountDashboard(): void {
       const gate = order.gates[Number(parts[1])];
       const price = gate ? gateDefault(gate.widthFt, gate.kind, order.labor) : null;
       if (gate && price !== null) gate.priceCents = price;
-      if (gate && order.runs.length === 1 && gate.widthFt > 0 && gate.widthFt <= order.runs[0].lengthFt && !gate.runId) gate.runId = order.runs[0].id;
+      if (gate && parts[2] === 'widthFt') setGateWidth(order, gate, gate.widthFt);
     }
+    if(/^gates\.\d+\.runId$/.test(path) && order.gates[Number(parts[1])]?.runId) placeGate(order, order.gates[Number(parts[1])]);
     dirty=true;
     if(path==='discount.kind'||path==='deposit.kind'||path==='packageId'||path==='labor'||/^gates\.\d+\.kind$/.test(path)) render(); else updateSummary();
   });
+
   node<HTMLInputElement>('[data-search]').addEventListener('input',(event) => {
     query=(event.target as HTMLInputElement).value; clearTimeout(searchTimer);
     searchTimer=setTimeout(() => void refreshList().catch((error) => status(error.message,true)),350);

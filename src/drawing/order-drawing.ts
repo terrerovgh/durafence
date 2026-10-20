@@ -33,7 +33,8 @@ export function invoiceSchedule(order: Order, result: Calculation): string[] {
       : ['No fence runs specified.']),
     'GATE DIMENSION SCHEDULE - width x height, as supplied',
     ...(order.gates.length ? order.gates.map((gate, i) => 'Gate ' + (i + 1) + ': ' +
-      (gate.kind === 'plank' ? 'Plank' : 'Custom aluminum') + ', ' + feet(gate.widthFt) + ' wide x ' + feet(gate.heightFt) + ' high; ' +
+      (gate.kind === 'plank' ? 'Plank' : 'Custom aluminum') + ', ' + feet(gate.widthFt) + ' wide x ' + feet(gate.heightFt) + ' high' +
+      (gate.double ? ', double (2 x ' + feet(gate.widthFt / 2) + ' leaves)' : ', single leaf') + '; ' +
       (gate.runId ? 'assigned to run ' + (order.runs.findIndex((run) => run.id === gate.runId) + 1) : 'standalone') + '.')
       : ['No gates specified.']),
   ];

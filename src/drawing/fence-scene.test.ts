@@ -73,8 +73,8 @@ test('schedules state supplied gate dimensions without inventing site geometry',
   const schedule = invoiceSchedule(order, calculate(order)).join('\n');
   assert.match(schedule, /Run 1 \(Front\): 200 ft/);
   assert.match(schedule, /Run 2 \(Side\): 75 ft/);
-  assert.match(schedule, /Plank, 12 ft wide x 8 ft high; assigned to run 1/);
-  assert.match(schedule, /Custom aluminum, 3 ft wide x 6 ft high; standalone/);
+  assert.match(schedule, /Plank, 12 ft wide x 8 ft high, single leaf; assigned to run 1/);
+  assert.match(schedule, /Custom aluminum, 3 ft wide x 6 ft high, single leaf; standalone/);
   assert.match(schedule, /no site plan|do not specify a site plan/);
   order.gates = [];
   order.cameras.extra = 2;
